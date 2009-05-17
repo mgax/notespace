@@ -1,0 +1,65 @@
+<html>
+<head>
+    <link type="text/css" href="/static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <style>
+        body { background-color: #aaa; font-family: Georgia; margin: 0; }
+        div#notes {}
+        div.note {
+            position: absolute; width: 200px; height: 150px; padding: .2em;
+            background-color: #669; border: 1px solid #446;
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="/static/jq/jquery-1.3.2.js"></script>
+    <script type="text/javascript" src="/static/jq/ui/ui.core.js"></script>
+    <script type="text/javascript" src="/static/jq/ui/ui.draggable.js"></script>
+    <script type="text/javascript" src="/static/jq/ui/ui.resizable.js"></script>
+    <script type="text/javascript">
+        $.make_note = function(opt) {
+            var note_id = opt['id'];
+            var note = $('<div>').append( $('<p>').append(opt['content']) );
+            note.attr('id', note_id).attr('class', 'note');
+            note.css({'background-color': '#669', 'border-color': '#446',
+                    'left': opt['x'], 'top': opt['y']});
+            note.resizable().draggable();
+            function edit_begin() {
+                var view = $('p:first', note);
+                var input = $('<textarea>').append(view.contents());
+                view.replaceWith(input);
+                var done_button = $('<a>').append('done').click(function() {
+                    done_button.remove();
+                    edit_done();
+                });
+                input.after(done_button);
+            }
+            function edit_done() {
+                var input = $('textarea', note);
+                var value = input.val();
+                input.val('saving');
+                $.post('/notes/' + note_id, {'content': value}, function(data) {
+                    var view = $('<p>').append(value);
+                    view.click(edit_begin);
+                    input.replaceWith(view);
+                }, 'json');
+            }
+            $('p:first', note).click(edit_begin);
+            $('body').append(note);
+        }
+
+        $(function() {
+            $.getJSON('/notes', function(data) {
+                $.each(data, function() {
+                    var note_id = this;
+                    $.getJSON('/notes/' + note_id, function(data) {
+                        data['id'] = note_id;
+                        $.make_note(data);
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+
+</body>
+</html>
