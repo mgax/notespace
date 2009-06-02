@@ -18,7 +18,7 @@ class Note(object):
 
 def demo_data():
     return {
-        0: Note(0, {'desc': 'ROOT'}, [1, 2]),
+        0: Note(0, {'desc': 'ROOT', 'x':100, 'y':100, 'w':300, 'h':400}, [1, 2]),
         1: Note(1, {'desc': 'note 1'}),
         2: Note(2, {'desc': 'note 2'}),
     }

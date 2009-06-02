@@ -15,13 +15,16 @@
     <script type="text/javascript" src="/static/jq/ui/ui.draggable.js"></script>
     <script type="text/javascript" src="/static/jq/ui/ui.resizable.js"></script>
     <script type="text/javascript">
-        $.make_note = function(opt) {
-            var note_id = opt['id'];
-            var note = $('<div>').append( $('<p>').append(opt['content']) );
+        $.make_note = function(note_id, note_props) {
+            var note = $('<div>').append( $('<p>').append(note_props['desc']) );
             note.attr('id', note_id).attr('class', 'note');
             note.css({'background-color': '#669', 'border-color': '#446',
-                    'left': opt['x'], 'top': opt['y']});
-            note.resizable().draggable();
+                    'left': note_props['x'], 'top': note_props['y'],
+                    'width': note_props['w'], 'height': note_props['h']});
+            note.resizable({stop: after_resize}).draggable({stop: after_drag});
+            $('p:first', note).click(edit_begin);
+            $('body').append(note);
+
             function edit_begin() {
                 var view = $('p:first', note);
                 var input = $('<textarea>').append(view.contents());
@@ -36,25 +39,28 @@
                 var input = $('textarea', note);
                 var value = input.val();
                 input.val('saving');
-                $.post('/notes/' + note_id, {'content': value}, function(data) {
+                note_props['desc'] = value;
+                $.post('/notes/' + note_id, note_props, function(data) {
                     var view = $('<p>').append(value);
                     view.click(edit_begin);
                     input.replaceWith(view);
                 }, 'json');
             }
-            $('p:first', note).click(edit_begin);
-            $('body').append(note);
+            function after_resize() {
+                note_props['w'] = note.css('width');
+                note_props['h'] = note.css('height');
+                $.post('/notes/' + note_id, note_props);
+            }
+            function after_drag() {
+                note_props['x'] = note.css('left');
+                note_props['y'] = note.css('top');
+                $.post('/notes/' + note_id, note_props);
+            }
         }
 
         $(function() {
-            $.getJSON('/notes', function(data) {
-                $.each(data, function() {
-                    var note_id = this;
-                    $.getJSON('/notes/' + note_id, function(data) {
-                        data['id'] = note_id;
-                        $.make_note(data);
-                    });
-                });
+            $.getJSON('/notes/0', function(data) {
+                $.make_note(0, data);
             });
         });
     </script>
