@@ -7,7 +7,7 @@ import server
 
 class TestGetNotes(unittest.TestCase):
     def setUp(self):
-        server.the_notes = deepcopy(server.demo_notes)
+        server.the_notes = server.demo_data()
         self.client = Client(server.application, BaseResponse)
 
     def failUnlessJsonResponse(self, resp, json_data):
@@ -16,16 +16,17 @@ class TestGetNotes(unittest.TestCase):
         self.failUnlessEqual(json.loads(resp.data), json_data)
 
     def test_notes_listing(self):
-        self.failUnlessJsonResponse(self.client.get('/notes'), ['one', 'two'])
+        self.failUnlessJsonResponse(self.client.get('/notes'), [0, 1, 2])
 
     def test_get_note(self):
-        self.failUnlessJsonResponse(self.client.get('/notes/one'),
-            {'x': 100, 'y': 50, 'content': 'ze first note'})
+        self.failUnlessJsonResponse(self.client.get('/notes/0'), {'desc': 'ROOT'})
+        self.failUnlessJsonResponse(self.client.get('/notes/0/children'), [1, 2])
 
     def test_change_note(self):
-        resp = self.client.post('/notes/one', data={'content': 'new content here'})
-        self.failUnlessJsonResponse(resp,
-            {'x': 100, 'y': 50, 'content': 'new content here'})
+        test_props = {'desc': 'new content here', 'a': 'b'}
+        resp = self.client.post('/notes/1', data=test_props)
+        self.failUnlessEqual(server.the_notes[1].props, test_props)
+        self.failUnlessJsonResponse(resp, test_props)
 
 if __name__ == '__main__':
     unittest.main()
