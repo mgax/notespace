@@ -4,10 +4,15 @@ import json
 from werkzeug import Client, BaseResponse
 
 import server
+from server import Note
 
 class TestGetNotes(unittest.TestCase):
     def setUp(self):
-        server.the_notes = server.demo_data()
+        server.the_notes = {
+            0: Note(0, {'desc': 'ROOT'}, [1, 2]),
+            1: Note(1, {'desc': 'note 1'}),
+            2: Note(2, {'desc': 'note 2'}),
+        }
         self.client = Client(server.application, BaseResponse)
 
     def failUnlessJsonResponse(self, resp, json_data):
@@ -27,6 +32,18 @@ class TestGetNotes(unittest.TestCase):
         resp = self.client.post('/notes/1', data=test_props)
         self.failUnlessEqual(server.the_notes[1].props, test_props)
         self.failUnlessJsonResponse(resp, test_props)
+
+    def test_create_note(self):
+        resp = self.client.post('/notes', data={'f': 'g'})
+        self.failUnlessJsonResponse(resp, 3)
+        self.failUnlessEqual(len(server.the_notes), 4)
+        self.failUnlessEqual(server.the_notes[3].props, {'f': 'g'})
+
+    def test_set_children(self):
+        resp = self.client.post('/notes/1/children', data={'children': json.dumps([2])})
+        self.failUnlessJsonResponse(resp, [2])
+        self.failUnlessEqual(server.the_notes[1].children, [2])
+        #self.failUnlessEqual(server.the_notes[0].children, [1])
 
 if __name__ == '__main__':
     unittest.main()

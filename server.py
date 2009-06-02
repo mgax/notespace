@@ -8,13 +8,14 @@ from werkzeug.exceptions import NotFound
 
 root_path = '/ZeStuff/proiecte/notespace/repo'
 
+def JsonResponse(data):
+    return Response(json.dumps(data), mimetype='application/json')
+
 class Note(object):
-    _next_id = 0
     def __init__(self, id, props={}, children=[]):
         self.id = id
         self.props = dict(props)
         self.children = list(children)
-        #self.id = Note._next_id; Note._next_id += 1
 
 def demo_data():
     return {
@@ -30,26 +31,35 @@ def index(request):
     return response
 
 def notes_index(request, note_id=None):
-    if note_id is None:
-        data = sorted(the_notes.keys())
+    if request.method == 'POST':
+        note_id = sorted(the_notes.keys())[-1] + 1
+        the_notes[note_id] = Note(note_id, dict( (key, value)
+            for key, value in request.form.iteritems()))
+        return JsonResponse(note_id)
     else:
-        note_id = int(note_id)
-        if note_id not in the_notes:
-            raise NotFound
-        if request.method == 'POST':
-            the_notes[note_id].props = dict( (key, value)
-                for key, value in request.form.iteritems())
-        data = the_notes[note_id].props
-    return Response(json.dumps(data), mimetype='application/json')
+        return JsonResponse(sorted(the_notes.keys()))
 
-def notes_children(request, note_id):
-    return Response(json.dumps(the_notes[int(note_id)].children), mimetype='application/json')
+def note_page(request, note_id):
+    note_id = int(note_id)
+    if note_id not in the_notes:
+        raise NotFound
+    if request.method == 'POST':
+        the_notes[note_id].props = dict( (key, value)
+            for key, value in request.form.iteritems())
+    return JsonResponse(the_notes[note_id].props)
+
+def note_children(request, note_id):
+    note_id = int(note_id)
+    if request.method == 'POST':
+        # TODO: make sure we receive a list of valid note_ids
+        the_notes[note_id].children = json.loads(request.form['children'])
+    return JsonResponse(the_notes[note_id].children)
 
 url_map = Map([
     Rule('/', endpoint=index),
     Rule('/notes', endpoint=notes_index),
-    Rule('/notes/<note_id>', endpoint=notes_index),
-    Rule('/notes/<note_id>/children', endpoint=notes_children),
+    Rule('/notes/<note_id>', endpoint=note_page),
+    Rule('/notes/<note_id>/children', endpoint=note_children),
     Rule('/static/<file>', endpoint='static', build_only=True),
 ])
 
