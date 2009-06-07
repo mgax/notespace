@@ -2,17 +2,24 @@
 <head>
     <link type="text/css" href="/static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
     <style>
-        body { background-color: #aaa; font-family: Georgia; margin: 0; }
-        div#notes {}
+        body { background-color: #bbb; font-family: Georgia; margin: 0; }
         div.note {
             position: absolute; width: 200px; height: 150px; padding: .2em;
             background-color: #669; border: 1px solid #446;
-            overflow: hidden;
-        }
+            overflow: hidden; }
+        div.toolbar {
+            float: right; width: 150px; height: 400px; padding: 1em;
+            background-color: #037; opacity: 0.5 }
+        div.button {
+            text-align: center; display: inline-block; position: absolute;
+            padding: .2em; background-color: #777; }
+        div.drag_hover { border: 1px solid #7f7; }
     </style>
+
     <script type="text/javascript" src="/static/jq/jquery-1.3.2.js"></script>
     <script type="text/javascript" src="/static/jq/ui/ui.core.js"></script>
     <script type="text/javascript" src="/static/jq/ui/ui.draggable.js"></script>
+    <script type="text/javascript" src="/static/jq/ui/ui.droppable.js"></script>
     <script type="text/javascript" src="/static/jq/ui/ui.resizable.js"></script>
     <script type="text/javascript">
         $.make_note = function(note_id, note_props, parent_note) {
@@ -33,10 +40,11 @@
             });
 
             note.attr('id', note_id).attr('class', 'note');
-            note.css({'background-color': '#669', 'border-color': '#446',
-                    'left': note_props['x'], 'top': note_props['y'],
+            note.css({'left': note_props['x'], 'top': note_props['y'],
                     'width': note_props['w'], 'height': note_props['h']});
             note.resizable({stop: after_resize}).draggable({stop: after_drag});
+            note.droppable({greedy: true, hoverClass: 'drag_hover', drop: on_drag_drop,
+                accept: '.toolbar *'});
             $('p:first', note).click(edit_begin);
 
             $(parent_note).append(note);
@@ -85,6 +93,13 @@
                 note_props['y'] = note.css('top');
                 $.post('/notes/' + note_id, note_props);
             }
+            function on_drag_drop(e, ui) {
+                var note_offset = note.offset();
+                note.append($(ui.draggable).clone().css({
+                    left: ui.offset.left - note_offset.left,
+                    top: ui.offset.top - note_offset.top
+                }));
+            }
         }
 
         $(function() {
@@ -92,14 +107,21 @@
                 $.each(data, function(item) {
                     var note_id = this
                     $.getJSON('/notes/' + note_id, function(data) {
-                        $.make_note(note_id, data, $('body')[0]);
+                        $.make_note(note_id, data, $('div#notes')[0]);
                     });
                 });
-            })
+            });
+            $('.toolbar .button').draggable({helper: 'clone'});
         });
     </script>
 </head>
 <body>
+
+<div id="notes"></div>
+
+<div class="toolbar">
+    <div class="button">Button</div>
+</div>
 
 </body>
 </html>
