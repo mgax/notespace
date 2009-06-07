@@ -88,9 +88,14 @@
         }
 
         $(function() {
-            $.getJSON('/notes/0', function(data) {
-                $.make_note(0, data, $('body')[0]);
-            });
+            $.getJSON('/notes/0/children', function(data) {
+                $.each(data, function(item) {
+                    var note_id = this
+                    $.getJSON('/notes/' + note_id, function(data) {
+                        $.make_note(note_id, data, $('body')[0]);
+                    });
+                });
+            })
         });
     </script>
 </head>
