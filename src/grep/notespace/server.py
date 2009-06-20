@@ -17,15 +17,25 @@ class Note(object):
         self.props = dict(props)
         self.children = list(children)
 
-def demo_data():
-    return {
-        0: Note(0, {'desc': 'ROOT'}, [1, 4]),
-        1: Note(1, {'desc': 'note 1', 'x':100, 'y':100, 'w':500, 'h':300}, [2, 3]),
-        2: Note(2, {'desc': 'note 2', 'x':10, 'y':80}),
-        3: Note(3, {'desc': 'note 3', 'x':240, 'y':100}),
-        4: Note(4, {'desc': 'note 4', 'x':150, 'y':450}),
-    }
-the_notes = demo_data()
+class DemoDb(object):
+    def __init__(self, notes={}):
+        self.notes = {}
+    def create_note(self, id, props={}, children=[]):
+        self.notes[id] = Note(id, props, children)
+
+def demo_data(db):
+    the_notes.create_note(0, {'desc': 'ROOT'}, [1, 4])
+    the_notes.create_note(1, {'desc': 'note 1', 'x':100, 'y':100, 'w':500, 'h':300}, [2, 3])
+    the_notes.create_note(2, {'desc': 'note 2', 'x':10, 'y':80})
+    the_notes.create_note(3, {'desc': 'note 3', 'x':240, 'y':100})
+    the_notes.create_note(4, {'desc': 'note 4', 'x':150, 'y':450})
+
+the_notes = DemoDb()
+#from grep.notespace.db import durus_db
+#db = durus_db(path.join(root_path, 'var/durus.db'))
+#the_notes = db.notes
+
+demo_data(the_notes)
 
 def index(request):
     response = Response(mimetype='text/html')
@@ -34,28 +44,28 @@ def index(request):
 
 def notes_index(request, note_id=None):
     if request.method == 'POST':
-        note_id = sorted(the_notes.keys())[-1] + 1
-        the_notes[note_id] = Note(note_id, dict( (key, value)
+        note_id = sorted(the_notes.notes.keys())[-1] + 1
+        the_notes.create_note(note_id, dict( (key, value)
             for key, value in request.form.iteritems()))
         return JsonResponse(note_id)
     else:
-        return JsonResponse(sorted(the_notes.keys()))
+        return JsonResponse(sorted(the_notes.notes.keys()))
 
 def note_page(request, note_id):
     note_id = int(note_id)
-    if note_id not in the_notes:
+    if note_id not in the_notes.notes:
         raise NotFound
     if request.method == 'POST':
-        the_notes[note_id].props = dict( (key, value)
+        the_notes.notes[note_id].props = dict( (key, value)
             for key, value in request.form.iteritems())
-    return JsonResponse(the_notes[note_id].props)
+    return JsonResponse(the_notes.notes[note_id].props)
 
 def note_children(request, note_id):
     note_id = int(note_id)
     if request.method == 'POST':
         # TODO: make sure we receive a list of valid note_ids
-        the_notes[note_id].children = json.loads(request.form['children'])
-    return JsonResponse(the_notes[note_id].children)
+        the_notes.notes[note_id].children = json.loads(request.form['children'])
+    return JsonResponse(the_notes.notes[note_id].children)
 
 url_map = Map([
     Rule('/', endpoint=index),
