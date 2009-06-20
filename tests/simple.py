@@ -3,8 +3,8 @@ import unittest
 import json
 from werkzeug import Client, BaseResponse
 
-import server
-from server import Note
+from grep.notespace import server
+from grep.notespace.server import Note
 
 class TestGetNotes(unittest.TestCase):
     def setUp(self):
