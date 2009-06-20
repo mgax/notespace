@@ -63,10 +63,13 @@ application = SharedDataMiddleware(application, {
 })
 
 if __name__ == '__main__':
+    #from logs import null_log
+    #null_log('durus')
+    #null_log('werkzeug')
     from durus_db import open_durus_db
     db = open_durus_db(path.join(root_path, 'var/durus.db'))
     from werkzeug import run_simple
-    run_simple('localhost', 8000, application)
+    run_simple('localhost', 8000, application, use_reloader=True)
 else:
     from demo_db import DemoDb, demo_data
     db = DemoDb()

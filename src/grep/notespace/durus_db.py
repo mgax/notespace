@@ -1,9 +1,5 @@
 from os import path
-from logging import getLogger, StreamHandler
 from cStringIO import StringIO
-
-durus_log = StringIO()
-getLogger('durus').addHandler(StreamHandler(durus_log))
 
 from durus.file_storage import FileStorage
 from durus.connection import Connection
