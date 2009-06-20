@@ -86,13 +86,13 @@
                 }, 'json');
             }
             function after_resize() {
-                note_props['w'] = note.css('width');
-                note_props['h'] = note.css('height');
+                note_props['w'] = parseInt(note.css('width'));
+                note_props['h'] = parseInt(note.css('height'));
                 $.post('/notes/' + note_id, note_props);
             }
             function after_drag() {
-                note_props['x'] = note.css('left');
-                note_props['y'] = note.css('top');
+                note_props['x'] = parseInt(note.css('left'));
+                note_props['y'] = parseInt(note.css('top'));
                 $.post('/notes/' + note_id, note_props);
             }
             function can_drop(draggable) {
