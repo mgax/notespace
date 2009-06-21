@@ -4,22 +4,19 @@
     <style>
         body { background-color: #bbb; font-family: Georgia; margin: 0; }
         body > ul { float: left; padding: 0; margin: 0;  }
-        li.note { background-color: #669; border: 1px solid #446; position: absolute; }
-        li.note { overflow: hidden; padding: .2em; }
+        li.note { background-color: #669; border: 1px solid #446;
+            position: absolute; overflow: hidden; padding: .2em; }
+        ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
         li.note > .buttons { position: absolute; right: .1em; top: .1em; }
         li.note > p { margin: 0; }
         ul.children { list-style-type: none; }
         ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
-        ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
-        ul.children.outline li.note > p { margin: 0; }
-        div.toolbar {
-            float: right; width: 150px; height: 400px; padding: 1em;
-            background-color: #037; opacity: 0.5 }
-        div.button {
-            text-align: center; display: inline-block; position: absolute;
-            padding: .2em; background-color: #777; }
-        li.drag_active { border-color: #880; }
-        li.drag_hover { border-color: #7f7; }
+        div.toolbar { background-color: #037; opacity: 0.5;
+            float: right; width: 150px; height: 400px; padding: 1em; }
+        div.button { background-color: #777; text-align: center;
+            display: inline-block; position: absolute; padding: .2em; }
+        li.note.drag_active { border-color: #880; }
+        li.note.drag_hover { border-color: #7f7; }
     </style>
 
     <script type="text/javascript" src="/static/jq/jquery-1.3.2.js"></script>
@@ -30,12 +27,25 @@
     <script type="text/javascript">
         $.make_note = function(note_id, note_props, parent_note) {
             var note = $('<li>');
+            note.attr('id', note_id).attr('class', 'note');
+
             note.append($('<div class="buttons">').append(
                 $('<a>[+]</a>').click(on_add_child),
                 $('<a>[o]</a>').click(on_click_outline),
                 $('<a>[b]</a>').click(on_click_box)
             ));
+
             note.append( $('<p>').append(note_props['desc']) );
+            $('p:first', note).click(edit_begin);
+
+            update_display();
+            note.bind('note_update_display', update_display)
+            note.draggable({stop: after_drag});
+            note.droppable({greedy: true,
+                hoverClass: 'drag_hover', activeClass: 'drag_active',
+                accept: can_drop, drop: on_drag_drop});
+
+            $(parent_note).append(note);
 
             var note_children;
             $.getJSON('/notes/' + note_id + '/children', function(data) {
@@ -49,17 +59,6 @@
                     });
                 });
             });
-
-            note.attr('id', note_id).attr('class', 'note');
-            $('p:first', note).click(edit_begin);
-            note.bind('note_update_display', update_display)
-            update_display();
-            note.draggable({stop: after_drag});
-            note.droppable({greedy: true,
-                hoverClass: 'drag_hover', activeClass: 'drag_active',
-                accept: can_drop, drop: on_drag_drop});
-
-            $(parent_note).append(note);
 
             function update_display() {
                 if($('ul.children.outline li.note').index(note) == -1) {
@@ -144,12 +143,12 @@
             function on_click_outline() {
                 if(block_click_hack) return;
                 $('> ul', note).addClass('outline');
-                var kids = $('.note', note).trigger('note_update_display');
+                $('.note', note).trigger('note_update_display');
             }
             function on_click_box() {
                 if(block_click_hack) return;
                 $('> ul', note).removeClass('outline');
-                var kids = $('.note', note).trigger('note_update_display');
+                $('.note', note).trigger('note_update_display');
             }
         }
 
