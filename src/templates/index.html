@@ -56,6 +56,7 @@
             $(parent_note).append(note);
 
             function on_add_child() {
+                if(block_click_hack) return;
                 var child_note_props = {desc: 'kid'};
                 $.post('/notes', child_note_props, function(data) {
                     var child_note_id = data;
@@ -69,6 +70,7 @@
                 }, 'json');
             }
             function edit_begin() {
+                if(block_click_hack) return;
                 var view = $('p:first', note);
                 var input = $('<textarea>').append(view.contents());
                 view.replaceWith(input);
@@ -94,10 +96,13 @@
                 note_props['h'] = parseInt(note.css('height'));
                 $.post('/notes/' + note_id, note_props);
             }
+            var block_click_hack = false; // hack - dragging causes spurious click event
             function after_drag() {
                 note_props['x'] = parseInt(note.css('left'));
                 note_props['y'] = parseInt(note.css('top'));
                 $.post('/notes/' + note_id, note_props);
+                setTimeout(function() { block_click_hack = false; }, 1);
+                block_click_hack = true;
             }
             function can_drop(draggable) {
                 if($('.toolbar *').index(draggable) > -1)
@@ -119,6 +124,7 @@
                 }));
             }
             function on_click_outline() {
+                if(block_click_hack) return;
                 $('> ul', note).addClass('outline');
                 var kids = $('.note', note);
                 kids.trigger('note_set_outline');
