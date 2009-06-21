@@ -3,13 +3,12 @@
     <link type="text/css" href="/static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
     <style>
         body { background-color: #bbb; font-family: Georgia; margin: 0; }
-        ul.children { list-style: none; }
-        li.note {
-            position: absolute; width: 200px; height: 150px; padding: .2em;
-            background-color: #669; border: 1px solid #446;
-            overflow: hidden; }
-        ul.outline li.note { position: static; width: auto; height: auto; }
-        ul.outline .note_button { display: none; }
+        li.note { background-color: #669; border: 1px solid #446; overflow: hidden; }
+        li.note.block { position: absolute; padding: .2em; }
+        li.note.block > ul.children { list-style: none; }
+        li.note.outline {}
+        li.note.outline > .note_button { display: none; }
+        li.note.outline > p { margin: 0; }
         div.toolbar {
             float: right; width: 150px; height: 400px; padding: 1em;
             background-color: #037; opacity: 0.5 }
@@ -28,7 +27,8 @@
     <script type="text/javascript">
         $.make_note = function(note_id, note_props, parent_note) {
             var note = $('<li>').append( $('<p>').append(note_props['desc']) );
-            note.append( $('<a class="note_button">').append('[+]').click(on_add_child) );
+            note.append( $('<a class="note_button">[+]</a>').click(on_add_child) );
+            note.append( $('<a class="note_button">[o]</a>').click(on_click_outline) );
 
             var note_children;
             $.getJSON('/notes/' + note_id + '/children', function(data) {
@@ -43,7 +43,7 @@
                 });
             });
 
-            note.attr('id', note_id).attr('class', 'note');
+            note.attr('id', note_id).attr('class', 'note block');
             note.css({'left': note_props['x'], 'top': note_props['y'],
                     'width': note_props['w'], 'height': note_props['h']});
             note.resizable({stop: after_resize}).draggable({stop: after_drag});
@@ -118,8 +118,15 @@
                     top: ui.offset.top - note_offset.top
                 }));
             }
+            function on_click_outline() {
+                $('> ul', note).addClass('outline');
+                var kids = $('.note', note);
+                kids.trigger('note_set_outline');
+                kids.removeClass('block').add(note).addClass('outline');
+            }
             function on_set_outline() {
-                note.css({width: 'auto', height: 'auto'});
+                note.css({width: 'auto', height: 'auto', left: 'auto', top: 'auto'});
+                return false;
             }
         }
 
