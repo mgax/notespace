@@ -3,14 +3,15 @@
     <link type="text/css" href="/static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
     <style>
         body { background-color: #bbb; font-family: Georgia; margin: 0; }
-        li.note { background-color: #669; border: 1px solid #446; overflow: hidden; }
-        li.note.block { position: absolute; padding: .2em; }
-        li.note.block > ul.children { list-style: none; }
-        li.note.block > .buttons { position: absolute; right: .1em; top: .1em; }
-        li.note.block > p { margin: .2em; }
-        li.note.outline {}
-        li.note.outline > .buttons { display: none; }
-        li.note.outline > p { margin: 0; }
+        body > ul { float: left; padding: 0; margin: 0;  }
+        li.note { background-color: #669; border: 1px solid #446; position: absolute; }
+        li.note { overflow: hidden; padding: .2em; }
+        li.note > .buttons { position: absolute; right: .1em; top: .1em; }
+        li.note > p { margin: 0; }
+        ul.children { list-style-type: none; }
+        ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
+        ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
+        ul.children.outline li.note > p { margin: 0; }
         div.toolbar {
             float: right; width: 150px; height: 400px; padding: 1em;
             background-color: #037; opacity: 0.5 }
@@ -31,7 +32,8 @@
             var note = $('<li>');
             note.append($('<div class="buttons">').append(
                 $('<a>[+]</a>').click(on_add_child),
-                $('<a>[o]</a>').click(on_click_outline)
+                $('<a>[o]</a>').click(on_click_outline),
+                $('<a>[b]</a>').click(on_click_box)
             ));
             note.append( $('<p>').append(note_props['desc']) );
 
@@ -48,18 +50,29 @@
                 });
             });
 
-            note.attr('id', note_id).attr('class', 'note block');
-            note.css({'left': note_props['x'], 'top': note_props['y'],
-                    'width': note_props['w'], 'height': note_props['h']});
-            note.resizable({stop: after_resize}).draggable({stop: after_drag});
+            note.attr('id', note_id).attr('class', 'note');
+            $('p:first', note).click(edit_begin);
+            note.bind('note_update_display', update_display)
+            update_display();
+            note.draggable({stop: after_drag});
             note.droppable({greedy: true,
                 hoverClass: 'drag_hover', activeClass: 'drag_active',
                 accept: can_drop, drop: on_drag_drop});
-            $('p:first', note).click(edit_begin);
-            note.bind('note_set_outline', on_set_outline)
 
             $(parent_note).append(note);
 
+            function update_display() {
+                if($('ul.children.outline li.note').index(note) == -1) {
+                    note.css({width: note_props['w'], height: note_props['h'],
+                        left: note_props['x'], top: note_props['y']});
+                    note.resizable({stop: after_resize});
+                }
+                else {
+                    note.removeAttr('style');
+                    note.resizable('destroy');
+                }
+                return false;
+            }
             function on_add_child() {
                 if(block_click_hack) return;
                 var child_note_props = {desc: 'kid'};
@@ -131,13 +144,12 @@
             function on_click_outline() {
                 if(block_click_hack) return;
                 $('> ul', note).addClass('outline');
-                var kids = $('.note', note);
-                kids.trigger('note_set_outline');
-                kids.removeClass('block').resizable('destroy').add(note).addClass('outline');
+                var kids = $('.note', note).trigger('note_update_display');
             }
-            function on_set_outline() {
-                note.css({width: 'auto', height: 'auto', left: 'auto', top: 'auto'});
-                return false;
+            function on_click_box() {
+                if(block_click_hack) return;
+                $('> ul', note).removeClass('outline');
+                var kids = $('.note', note).trigger('note_update_display');
             }
         }
 
