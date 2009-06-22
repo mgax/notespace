@@ -32,7 +32,8 @@
             note.append($('<div class="buttons">').append(
                 $('<a>[+]</a>').click(on_add_child),
                 $('<a>[o]</a>').click(on_click_outline),
-                $('<a>[b]</a>').click(on_click_box)
+                $('<a>[b]</a>').click(on_click_box),
+                $('<a>[x]</a>').click(on_click_delete)
             ));
 
             note.append( $('<p>').append(note_props['desc']) );
@@ -149,6 +150,10 @@
                 if(block_click_hack) return;
                 $('> ul', note).removeClass('outline');
                 $('.note', note).trigger('note_update_display');
+            }
+            function on_click_delete() {
+                $.ajax({type: 'DELETE', url: '/notes/' + note_id, dataType: "json",
+                    success: function(data) { note.remove(); }});
             }
         }
 

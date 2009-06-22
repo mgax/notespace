@@ -50,7 +50,18 @@ class TestGetNotes(unittest.TestCase):
         self.failUnlessJsonResponse(resp, [2])
         self.failUnless(self.db.committed)
         self.failUnlessEqual(self.db.notes[1].children, [2])
-        #self.failUnlessEqual(self.db.notes[0].children, [1])
+        self.failUnlessEqual(self.db.notes[0].children, [1])
+
+    def test_remove_note(self):
+        self.client.post('/notes/1/children', data={'children': json.dumps([2])})
+        self.failUnless(1 in self.db.notes)
+        self.failUnless(2 in self.db.notes[1].children)
+
+        resp = self.client.delete('/notes/1')
+        self.failUnlessJsonResponse(resp, 'ok')
+        self.failIf(1 in self.db.notes)
+        self.failIf(1 in self.db.notes[0].children)
+        self.failIf(2 in self.db.notes)
 
 if __name__ == '__main__':
     unittest.main()

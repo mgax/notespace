@@ -34,13 +34,31 @@ def note_page(request, note_id):
         db.notes[note_id].props = dict( (key, value)
             for key, value in request.form.iteritems())
         db.commit()
+    if request.method == 'DELETE':
+        remove_note(note_id)
+        db.commit()
+        return JsonResponse('ok')
     return JsonResponse(dict(db.notes[note_id].props))
+
+def remove_note(note_id):
+    for kid in db.notes[note_id].children:
+        remove_note(kid)
+    cleanup_child_links(note_id)
+    del db.notes[note_id]
+
+def cleanup_child_links(note_id):
+    for note in db.notes.values():
+        if note_id in note.children:
+            note.children.remove(note_id)
 
 def note_children(request, note_id):
     note_id = int(note_id)
     if request.method == 'POST':
         # TODO: make sure we receive a list of valid note_ids
-        db.notes[note_id].children = json.loads(request.form['children'])
+        children = json.loads(request.form['children'])
+        for kid in children:
+            cleanup_child_links(kid)
+        db.notes[note_id].children = children
         db.commit()
     return JsonResponse(list(db.notes[note_id].children))
 
