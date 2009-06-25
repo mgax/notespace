@@ -25,26 +25,123 @@
     <script type="text/javascript" src="/static/jq/ui/ui.droppable.js"></script>
     <script type="text/javascript" src="/static/jq/ui/ui.resizable.js"></script>
     <script type="text/javascript">
-        $.make_note = function(note_id, note_props, parent_note) {
-            var note = $('<li>');
+        $.Note = function(note_id, note_props, parent_note) {
+            var note_this = this;
+
+            this.update_display = function() {
+                if($('ul.children.outline li.note').index(note) == -1) {
+                    note.css({width: note_props['w'], height: note_props['h'],
+                        left: note_props['x'], top: note_props['y']});
+                    note.resizable({stop: note_this.after_resize});
+                }
+                else {
+                    note.removeAttr('style');
+                    note.resizable('destroy');
+                }
+                return false;
+            }
+            this.on_add_child = function() {
+                if(block_click_hack) return;
+                var child_note_props = {desc: 'kid'};
+                $.post('/notes', child_note_props, function(data) {
+                    var child_note_id = data;
+                    note_children.push(child_note_id);
+                    console.log('on_add_child made kid with note_id=' + child_note_id);
+                    $.post('/notes/' + note_id + '/children',
+                      {children: '['+note_children+']'}, function(data) {
+                        new $.Note(child_note_id, child_note_props,
+                            $('ul.children', note)[0]);
+                    }, 'json');
+                }, 'json');
+            }
+            this.edit_begin = function() {
+                if(block_click_hack) return;
+                var view = $('p:first', note);
+                var input = $('<textarea>').append(view.contents());
+                view.replaceWith(input);
+                var done_button = $('<a>').append('done').click(function() {
+                    done_button.remove();
+                    note_this.edit_done();
+                });
+                input.after(done_button);
+            }
+            this.edit_done = function() {
+                var input = $('textarea', note);
+                var value = input.val();
+                input.val('saving');
+                note_props['desc'] = value;
+                $.post('/notes/' + note_id, note_props, function(data) {
+                    var view = $('<p>').append(value);
+                    view.click(note_this.edit_begin);
+                    input.replaceWith(view);
+                }, 'json');
+            }
+            this.after_resize = function() {
+                note_props['w'] = parseInt(note.css('width'));
+                note_props['h'] = parseInt(note.css('height'));
+                $.post('/notes/' + note_id, note_props);
+            }
+            var block_click_hack = false; // hack - dragging causes spurious click event
+            this.after_drag = function() {
+                note_props['x'] = parseInt(note.css('left'));
+                note_props['y'] = parseInt(note.css('top'));
+                $.post('/notes/' + note_id, note_props);
+                setTimeout(function() { block_click_hack = false; }, 1);
+                block_click_hack = true;
+            }
+            this.can_drop = function(draggable) {
+                if($('.toolbar *').index(draggable) > -1)
+                    return true;
+                if($(draggable).hasClass('note')) {
+                    if($('.note', draggable).index(note) > -1)
+                        return false;
+                    return true;
+                }
+                return false;
+            }
+            this.on_drag_drop = function(e, ui) {
+                if(ui.draggable.hasClass('note'))
+                    return;
+                var note_offset = note.offset();
+                note.append($(ui.draggable).clone().css({
+                    left: ui.offset.left - note_offset.left,
+                    top: ui.offset.top - note_offset.top
+                }));
+            }
+            this.on_click_outline = function() {
+                if(block_click_hack) return;
+                $('> ul', note).addClass('outline');
+                $('.note', note).trigger('note_update_display');
+            }
+            this.on_click_box = function() {
+                if(block_click_hack) return;
+                $('> ul', note).removeClass('outline');
+                $('.note', note).trigger('note_update_display');
+            }
+            this.on_click_delete = function() {
+                $.ajax({type: 'DELETE', url: '/notes/' + note_id, dataType: "json",
+                    success: function(data) { note.remove(); }});
+            }
+
+            var note = $('<li>').data('this', this);
             note.attr('id', note_id).attr('class', 'note');
 
             note.append($('<div class="buttons">').append(
-                $('<a>[+]</a>').click(on_add_child),
-                $('<a>[o]</a>').click(on_click_outline),
-                $('<a>[b]</a>').click(on_click_box),
-                $('<a>[x]</a>').click(on_click_delete)
+                $('<a>[+]</a>').click(this.on_add_child),
+                $('<a>[o]</a>').click(this.on_click_outline),
+                $('<a>[b]</a>').click(this.on_click_box),
+                $('<a>[x]</a>').click(this.on_click_delete)
             ));
 
             note.append( $('<p>').append(note_props['desc']) );
-            $('p:first', note).click(edit_begin);
+            $('p:first', note).click(this.edit_begin);
 
-            update_display();
-            note.bind('note_update_display', update_display)
-            note.draggable({stop: after_drag});
+            this.update_display();
+            note.bind('note_update_display', this.update_display)
+            note.draggable({stop: this.after_drag});
             note.droppable({greedy: true,
                 hoverClass: 'drag_hover', activeClass: 'drag_active',
-                accept: can_drop, drop: on_drag_drop});
+                accept: this.can_drop, drop: this.on_drag_drop});
 
             $(parent_note).append(note);
 
@@ -56,105 +153,10 @@
                 $.each(data, function(item) {
                     var child_note_id = this
                     $.getJSON('/notes/' + child_note_id, function(data) {
-                        $.make_note(child_note_id, data, children_ul);
+                        new $.Note(child_note_id, data, children_ul);
                     });
                 });
             });
-
-            function update_display() {
-                if($('ul.children.outline li.note').index(note) == -1) {
-                    note.css({width: note_props['w'], height: note_props['h'],
-                        left: note_props['x'], top: note_props['y']});
-                    note.resizable({stop: after_resize});
-                }
-                else {
-                    note.removeAttr('style');
-                    note.resizable('destroy');
-                }
-                return false;
-            }
-            function on_add_child() {
-                if(block_click_hack) return;
-                var child_note_props = {desc: 'kid'};
-                $.post('/notes', child_note_props, function(data) {
-                    var child_note_id = data;
-                    note_children.push(child_note_id);
-                    console.log('on_add_child made kid with note_id=' + child_note_id);
-                    $.post('/notes/' + note_id + '/children',
-                      {children: '['+note_children+']'}, function(data) {
-                        $.make_note(child_note_id, child_note_props,
-                            $('ul.children', note)[0]);
-                    }, 'json');
-                }, 'json');
-            }
-            function edit_begin() {
-                if(block_click_hack) return;
-                var view = $('p:first', note);
-                var input = $('<textarea>').append(view.contents());
-                view.replaceWith(input);
-                var done_button = $('<a>').append('done').click(function() {
-                    done_button.remove();
-                    edit_done();
-                });
-                input.after(done_button);
-            }
-            function edit_done() {
-                var input = $('textarea', note);
-                var value = input.val();
-                input.val('saving');
-                note_props['desc'] = value;
-                $.post('/notes/' + note_id, note_props, function(data) {
-                    var view = $('<p>').append(value);
-                    view.click(edit_begin);
-                    input.replaceWith(view);
-                }, 'json');
-            }
-            function after_resize() {
-                note_props['w'] = parseInt(note.css('width'));
-                note_props['h'] = parseInt(note.css('height'));
-                $.post('/notes/' + note_id, note_props);
-            }
-            var block_click_hack = false; // hack - dragging causes spurious click event
-            function after_drag() {
-                note_props['x'] = parseInt(note.css('left'));
-                note_props['y'] = parseInt(note.css('top'));
-                $.post('/notes/' + note_id, note_props);
-                setTimeout(function() { block_click_hack = false; }, 1);
-                block_click_hack = true;
-            }
-            function can_drop(draggable) {
-                if($('.toolbar *').index(draggable) > -1)
-                    return true;
-                if($(draggable).hasClass('note')) {
-                    if($('.note', draggable).index(note) > -1)
-                        return false;
-                    return true;
-                }
-                return false;
-            }
-            function on_drag_drop(e, ui) {
-                if(ui.draggable.hasClass('note'))
-                    return;
-                var note_offset = note.offset();
-                note.append($(ui.draggable).clone().css({
-                    left: ui.offset.left - note_offset.left,
-                    top: ui.offset.top - note_offset.top
-                }));
-            }
-            function on_click_outline() {
-                if(block_click_hack) return;
-                $('> ul', note).addClass('outline');
-                $('.note', note).trigger('note_update_display');
-            }
-            function on_click_box() {
-                if(block_click_hack) return;
-                $('> ul', note).removeClass('outline');
-                $('.note', note).trigger('note_update_display');
-            }
-            function on_click_delete() {
-                $.ajax({type: 'DELETE', url: '/notes/' + note_id, dataType: "json",
-                    success: function(data) { note.remove(); }});
-            }
         }
 
         $(function() {
@@ -162,7 +164,7 @@
                 $.each(data, function(item) {
                     var note_id = this
                     $.getJSON('/notes/' + note_id, function(data) {
-                        $.make_note(note_id, data, $('ul#notes')[0]);
+                        new $.Note(note_id, data, $('ul#notes')[0]);
                     });
                 });
             });
