@@ -16,8 +16,8 @@ class TestGetNotes(unittest.TestCase):
         self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.db.create_note(1, {'desc': 'note 1'})
         self.db.create_note(2, {'desc': 'note 2'})
-        server.db = self.db
-        self.client = Client(server.application, BaseResponse)
+        self.app = server.NotespaceApp(self.db)
+        self.client = Client(self.app, BaseResponse)
 
     def failUnlessJsonResponse(self, resp, json_data):
         self.failUnlessEqual(resp.status_code, 200)

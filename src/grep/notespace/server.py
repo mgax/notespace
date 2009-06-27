@@ -11,96 +11,96 @@ root_path = path.normpath(path.join(path.dirname(__file__), '../../..'))
 def JsonResponse(data):
     return Response(json.dumps(data), mimetype='application/json')
 
-def index(request):
-    response = Response(mimetype='text/html')
-    response.data = open(path.join(root_path, 'src/templates/index.html')).read()
-    return response
+class NotespaceApp(object):
+    def __init__(self, db):
+        self.db = db
+        self.url_map = Map([
+            Rule('/', endpoint=self.index),
+            Rule('/notes', endpoint=self.notes_index),
+            Rule('/notes/<note_id>', endpoint=self.note_page),
+            Rule('/notes/<note_id>/children', endpoint=self.note_children),
+            Rule('/static/<file>', endpoint='static', build_only=True),
+        ])
 
-def notes_index(request, note_id=None):
-    if request.method == 'POST':
-        note_id = sorted(db.notes.keys())[-1] + 1
-        db.create_note(note_id, dict( (key, value)
-            for key, value in request.form.iteritems()))
-        db.commit()
-        return JsonResponse(note_id)
-    else:
-        return JsonResponse(sorted(db.notes.keys()))
 
-def note_page(request, note_id):
-    note_id = int(note_id)
-    if note_id not in db.notes:
-        raise NotFound
-    if request.method == 'POST':
-        db.notes[note_id].props = dict( (key, value)
-            for key, value in request.form.iteritems())
-        db.commit()
-    if request.method == 'DELETE':
-        remove_note(note_id)
-        db.commit()
-        return JsonResponse('ok')
-    return JsonResponse(dict(db.notes[note_id].props))
+    def index(self, request):
+        response = Response(mimetype='text/html')
+        response.data = open(path.join(root_path, 'src/templates/index.html')).read()
+        return response
 
-def remove_note(note_id):
-    for kid in db.notes[note_id].children:
-        remove_note(kid)
-    cleanup_child_links(note_id)
-    del db.notes[note_id]
+    def notes_index(self, request, note_id=None):
+        if request.method == 'POST':
+            note_id = sorted(self.db.notes.keys())[-1] + 1
+            self.db.create_note(note_id, dict( (key, value)
+                for key, value in request.form.iteritems()))
+            self.db.commit()
+            return JsonResponse(note_id)
+        else:
+            return JsonResponse(sorted(self.db.notes.keys()))
 
-def cleanup_child_links(note_id):
-    for note in db.notes.values():
-        if note_id in note.children:
-            note.children.remove(note_id)
+    def note_page(self, request, note_id):
+        note_id = int(note_id)
+        if note_id not in self.db.notes:
+            raise NotFound
+        if request.method == 'POST':
+            self.db.notes[note_id].props = dict( (key, value)
+                for key, value in request.form.iteritems())
+            self.db.commit()
+        if request.method == 'DELETE':
+            self.remove_note(note_id)
+            self.db.commit()
+            return JsonResponse('ok')
+        return JsonResponse(dict(self.db.notes[note_id].props))
 
-def note_children(request, note_id):
-    note_id = int(note_id)
-    if request.method == 'POST':
-        # TODO: make sure we receive a list of valid note_ids
-        children = json.loads(request.form['children'])
-        for kid in children:
-            cleanup_child_links(kid)
-        db.notes[note_id].children = children
-        db.commit()
-    return JsonResponse(list(db.notes[note_id].children))
+    def remove_note(self, note_id):
+        for kid in self.db.notes[note_id].children:
+            self.remove_note(kid)
+        self.cleanup_child_links(note_id)
+        del self.db.notes[note_id]
 
-def dump_db():
-    return json.dumps(dict(
-        (note_id, {'props': note.props, 'children': note.children})
-        for note_id, note in db.notes.iteritems()
-    ))
+    def cleanup_child_links(self, note_id):
+        for note in self.db.notes.values():
+            if note_id in note.children:
+                note.children.remove(note_id)
 
-def load_db(import_data):
-    db.notes.clear()
-    for note_id, note_data in json.loads(import_data).iteritems():
-        db.create_note(int(note_id), note_data['props'], note_data['children'])
-    db.commit()
+    def note_children(self, request, note_id):
+        note_id = int(note_id)
+        if request.method == 'POST':
+            # TODO: make sure we receive a list of valid note_ids
+            children = json.loads(request.form['children'])
+            for kid in children:
+                self.cleanup_child_links(kid)
+            self.db.notes[note_id].children = children
+            self.db.commit()
+        return JsonResponse(list(self.db.notes[note_id].children))
 
-url_map = Map([
-    Rule('/', endpoint=index),
-    Rule('/notes', endpoint=notes_index),
-    Rule('/notes/<note_id>', endpoint=note_page),
-    Rule('/notes/<note_id>/children', endpoint=note_children),
-    Rule('/static/<file>', endpoint='static', build_only=True),
-])
+    def dump_db(self):
+        return json.dumps(dict(
+            (note_id, {'props': note.props, 'children': note.children})
+            for note_id, note in self.db.notes.iteritems()
+        ))
 
-@Request.application
-def application(request):
-    return url_map.bind_to_environ(request.environ).dispatch(
-        lambda view, params: view(request, **params),
-        catch_http_exceptions=True)
+    def load_db(self, import_data):
+        self.db.notes.clear()
+        for note_id, note_data in json.loads(import_data).iteritems():
+            self.db.create_note(int(note_id), note_data['props'], note_data['children'])
+        self.db.commit()
 
-application = SharedDataMiddleware(application, {
-    '/static':  path.join(root_path, 'web/static')
-})
+    @Request.application
+    def __call__(self, request):
+        return self.url_map.bind_to_environ(request.environ).dispatch(
+            lambda view, params: view(request, **params),
+            catch_http_exceptions=True)
+
 
 if __name__ == '__main__':
-    #from logs import null_log
-    #null_log('durus')
-    #null_log('werkzeug')
     from durus_db import open_durus_db
     db = open_durus_db(path.join(root_path, 'var/durus.db'))
+
+    app = NotespaceApp(db)
+    app = SharedDataMiddleware(app, {
+        '/static':  path.join(root_path, 'web/static')
+    })
+
     from werkzeug import run_simple
-    run_simple('localhost', 8000, application, use_reloader=True)
-else:
-    from demo_db import DemoDb, demo_data
-    db = DemoDb()
-    demo_data(db)
+    run_simple('localhost', 8000, app, use_reloader=True)

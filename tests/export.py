@@ -16,8 +16,7 @@ class TestGetNotes(unittest.TestCase):
         self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.db.create_note(1, {'desc': 'note 1'})
         self.db.create_note(2, {'desc': 'note 2'})
-        server.db = self.db
-        self.client = Client(server.application, BaseResponse)
+        self.app = server.NotespaceApp(self.db)
 
     def test_export(self):
         reference_dump = {
@@ -25,7 +24,7 @@ class TestGetNotes(unittest.TestCase):
             '1': {'props': {'desc': 'note 1'}, 'children': []},
             '2': {'props': {'desc': 'note 2'}, 'children': []},
         }
-        dump = json.loads(server.dump_db())
+        dump = json.loads(self.app.dump_db())
         self.failUnlessEqual(dump, reference_dump)
 
     def test_import(self):
@@ -35,7 +34,7 @@ class TestGetNotes(unittest.TestCase):
             '2': {'props': {'desc': 'two', 'x': 'b'}, 'children': []},
         })
         self.failIf(self.db.committed)
-        server.load_db(import_data)
+        self.app.load_db(import_data)
         self.failUnless(self.db.committed)
         db_notes = self.db.notes
         self.failUnlessEqual(set(db_notes.keys()), set([0, 1, 2]))
