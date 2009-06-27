@@ -92,15 +92,17 @@ class NotespaceApp(object):
             lambda view, params: view(request, **params),
             catch_http_exceptions=True)
 
-
-if __name__ == '__main__':
+def open_notespace_app(db_path):
     from durus_db import open_durus_db
-    db = open_durus_db(path.join(root_path, 'var/durus.db'))
-
+    db = open_durus_db(db_path)
     app = NotespaceApp(db)
     app = SharedDataMiddleware(app, {
         '/static':  path.join(root_path, 'web/static')
     })
+    return app
+
+if __name__ == '__main__':
+    app = open_notespace_app(path.join(root_path, 'var/durus.db'))
 
     from werkzeug import run_simple
     run_simple('localhost', 8000, app, use_reloader=True)

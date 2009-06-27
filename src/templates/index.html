@@ -1,6 +1,6 @@
 <html>
 <head>
-    <link type="text/css" href="/static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <link type="text/css" href="static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
     <style>
         body { background-color: #bbb; font-family: Georgia; margin: 0; }
         body > ul { float: left; padding: 0; margin: 0;  }
@@ -20,11 +20,11 @@
         li.note.ui-draggable-dragging { z-index: 1; }
     </style>
 
-    <script type="text/javascript" src="/static/jq/jquery-1.3.2.js"></script>
-    <script type="text/javascript" src="/static/jq/ui/ui.core.js"></script>
-    <script type="text/javascript" src="/static/jq/ui/ui.draggable.js"></script>
-    <script type="text/javascript" src="/static/jq/ui/ui.droppable.js"></script>
-    <script type="text/javascript" src="/static/jq/ui/ui.resizable.js"></script>
+    <script type="text/javascript" src="static/jq/jquery-1.3.2.js"></script>
+    <script type="text/javascript" src="static/jq/ui/ui.core.js"></script>
+    <script type="text/javascript" src="static/jq/ui/ui.draggable.js"></script>
+    <script type="text/javascript" src="static/jq/ui/ui.droppable.js"></script>
+    <script type="text/javascript" src="static/jq/ui/ui.resizable.js"></script>
     <script type="text/javascript">
         $.Note = function(note_id, note_props, parent_note) {
             var note_this = this;
@@ -47,11 +47,11 @@
             this.on_add_child = function() {
                 if(block_click_hack) return;
                 var child_note_props = {desc: 'kid'};
-                $.post('/notes', child_note_props, function(data) {
+                $.post('notes', child_note_props, function(data) {
                     var child_note_id = data;
                     var note_children = note_this.list_children();
                     note_children.push(child_note_id);
-                    $.post('/notes/' + note_id + '/children',
+                    $.post('notes/' + note_id + '/children',
                         {children: '['+note_children+']'},
                         function(data) {
                             new $.Note(child_note_id, child_note_props,
@@ -75,7 +75,7 @@
                 var value = input.val();
                 input.val('saving');
                 note_props['desc'] = value;
-                $.post('/notes/' + note_id, note_props, function(data) {
+                $.post('notes/' + note_id, note_props, function(data) {
                     var view = $('<p>').append(value);
                     view.click(note_this.edit_begin);
                     input.replaceWith(view);
@@ -84,7 +84,7 @@
             this.after_resize = function() {
                 note_props['w'] = parseInt(note.css('width'));
                 note_props['h'] = parseInt(note.css('height'));
-                $.post('/notes/' + note_id, note_props);
+                $.post('notes/' + note_id, note_props);
             }
             var block_click_hack = false; // hack - dragging causes spurious click event
             this.do_block_click_hack = function() {
@@ -94,7 +94,7 @@
             this.after_drag = function() {
                 note_props['x'] = parseInt(note.css('left'));
                 note_props['y'] = parseInt(note.css('top'));
-                $.post('/notes/' + note_id, note_props);
+                $.post('notes/' + note_id, note_props);
             }
             this.can_drop = function(draggable) {
                 if($('.toolbar *').index(draggable) > -1)
@@ -125,12 +125,12 @@
                         }
                         $('> ul', note).append(ui.draggable.css(position));
                         var note_children = note_this.list_children();
-                        $.post('/notes/' + note_id + '/children',
+                        $.post('notes/' + note_id + '/children',
                             {children: '['+note_children+']'},
                             function(data) {
                                 $.extend(moving_note.note_props,
                                     {x: position.left, y: position.top});
-                                $.post('/notes/' + moving_note.note_id,
+                                $.post('notes/' + moving_note.note_id,
                                     moving_note.note_props);
                             },
                             'json');
@@ -156,7 +156,7 @@
                 $('.note', note).trigger('note_update_display');
             }
             this.on_click_delete = function() {
-                $.ajax({type: 'DELETE', url: '/notes/' + note_id, dataType: "json",
+                $.ajax({type: 'DELETE', url: 'notes/' + note_id, dataType: "json",
                     success: function(data) { note.remove(); }});
             }
 
@@ -188,13 +188,13 @@
             $(parent_note).append(note);
 
             var note_children;
-            $.getJSON('/notes/' + note_id + '/children', function(data) {
+            $.getJSON('notes/' + note_id + '/children', function(data) {
                 note_children = data;
                 var children_ul = $('<ul class="children">')[0];
                 note.append(children_ul);
                 $.each(data, function(item) {
                     var child_note_id = this
-                    $.getJSON('/notes/' + child_note_id, function(data) {
+                    $.getJSON('notes/' + child_note_id, function(data) {
                         new $.Note(child_note_id, data, children_ul);
                     });
                 });
@@ -202,10 +202,10 @@
         }
 
         $(function() {
-            $.getJSON('/notes/0/children', function(data) {
+            $.getJSON('notes/0/children', function(data) {
                 $.each(data, function(item) {
                     var note_id = this
-                    $.getJSON('/notes/' + note_id, function(data) {
+                    $.getJSON('notes/' + note_id, function(data) {
                         new $.Note(note_id, data, $('ul#notes')[0]);
                     });
                 });

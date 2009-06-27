@@ -1,5 +1,8 @@
 from os import path
 from cStringIO import StringIO
+import logging
+from logs import null_log
+null_log('durus')
 
 from durus.file_storage import FileStorage
 from durus.connection import Connection
@@ -18,9 +21,15 @@ class DurusDb(object):
     def __init__(self, db_connection):
         self.db_connection = db_connection
         db_root = db_connection.get_root()
-        if 'notespace_db' not in db_root:
+        new_db = 'notespace_db' not in db_root
+        if new_db:
             db_root['notespace_db'] = BTree()
+            self.commit()
         self.notes = db_root['notespace_db']
+        if new_db:
+            from demo_db import demo_data
+            demo_data(self)
+            self.commit()
     def create_note(self, id, props={}, children=[]):
         self.notes[id] = Note(id, props, children)
     #def close(self):
@@ -29,11 +38,4 @@ class DurusDb(object):
         self.db_connection.commit()
 
 def open_durus_db(db_path):
-    new_db = not path.isfile(db_path)
-    db_connection = Connection(FileStorage(db_path))
-    db = DurusDb(db_connection)
-    if new_db:
-        from demo_db import demo_data
-        demo_data(db)
-        db.commit()
-    return db
+    return DurusDb(Connection(FileStorage(db_path)))
