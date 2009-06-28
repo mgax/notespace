@@ -14,7 +14,7 @@ class DemoDb(object):
 
 def demo_data(db):
     db.create_note(0, {'desc': 'ROOT'}, [1, 4])
-    db.create_note(1, {'desc': 'note 1', 'x':'100', 'y':'100', 'w':'500', 'h':'300'}, [2, 3])
-    db.create_note(2, {'desc': 'note 2', 'x':'10', 'y':'80', 'w': '150', 'h': '100'})
-    db.create_note(3, {'desc': 'note 3', 'x':'240', 'y':'100', 'w': '150', 'h': '100'})
-    db.create_note(4, {'desc': 'note 4', 'x':'150', 'y':'450', 'w': '150', 'h': '100'})
+    db.create_note(1, {'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300}, [2, 3])
+    db.create_note(2, {'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100})
+    db.create_note(3, {'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100})
+    db.create_note(4, {'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})

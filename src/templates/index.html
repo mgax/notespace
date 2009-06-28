@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <link type="text/css" href="static/jq/themes/smoothness/ui.all.css" rel="stylesheet" />
@@ -26,7 +27,7 @@
     <script type="text/javascript" src="static/jq/ui/ui.draggable.js"></script>
     <script type="text/javascript" src="static/jq/ui/ui.droppable.js"></script>
     <script type="text/javascript" src="static/jq/ui/ui.resizable.js"></script>
-    <script type="text/javascript">
+    <script type="text/javascript"><!--
         $.Note = function(note_id, note_props, parent_note) {
             var note_this = this;
 
@@ -35,8 +36,8 @@
             }
             this.update_display = function() {
                 if($('ul.children.outline li.note').index(note) == -1) {
-                    note.css({width: note_props['w'], height: note_props['h'],
-                        left: note_props['x'], top: note_props['y']});
+                    note.css({width: note_props['width'], height: note_props['height'],
+                        left: note_props['left'], top: note_props['top']});
                     note.resizable({stop: note_this.after_resize});
                 }
                 else {
@@ -82,8 +83,8 @@
                 }, 'json');
             }
             this.after_resize = function() {
-                note_props['w'] = parseInt(note.css('width'));
-                note_props['h'] = parseInt(note.css('height'));
+                note_props['width'] = parseInt(note.css('width'));
+                note_props['height'] = parseInt(note.css('height'));
                 $.post('notes/' + note_id, {props: $.toJSON(note_props)});
             }
             var block_click_hack = false; // hack - dragging causes spurious click event
@@ -92,8 +93,8 @@
                 block_click_hack = true;
             }
             this.after_drag = function() {
-                note_props['x'] = parseInt(note.css('left'));
-                note_props['y'] = parseInt(note.css('top'));
+                note_props['left'] = parseInt(note.css('left'));
+                note_props['top'] = parseInt(note.css('top'));
                 $.post('notes/' + note_id, {props: $.toJSON(note_props)});
             }
             this.can_drop = function(draggable) {
@@ -212,7 +213,7 @@
             });
             $('.toolbar .button').draggable({helper: 'clone'});
         });
-    </script>
+    --></script>
 </head>
 <body>
 
