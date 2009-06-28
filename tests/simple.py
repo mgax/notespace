@@ -33,13 +33,13 @@ class TestGetNotes(unittest.TestCase):
 
     def test_change_note(self):
         test_props = {'desc': 'new content here', 'a': 'b'}
-        resp = self.client.post('/notes/1', data=test_props)
+        resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
         self.failUnless(self.db.committed)
         self.failUnlessEqual(self.db.notes[1].props, test_props)
         self.failUnlessJsonResponse(resp, test_props)
 
     def test_create_note(self):
-        resp = self.client.post('/notes', data={'f': 'g'})
+        resp = self.client.post('/notes', data={'props': json.dumps({'f': 'g'})})
         self.failUnlessJsonResponse(resp, 3)
         self.failUnless(self.db.committed)
         self.failUnlessEqual(len(self.db.notes), 4)
@@ -53,7 +53,7 @@ class TestGetNotes(unittest.TestCase):
         self.failUnlessEqual(self.db.notes[0].children, [1])
 
     def test_remove_note(self):
-        self.client.post('/notes/1/children', data={'children': json.dumps([2])})
+        self.client.post('/notes/1/children', data={'children': json.dumps([2]) })
         self.failUnless(1 in self.db.notes)
         self.failUnless(2 in self.db.notes[1].children)
 

@@ -31,8 +31,7 @@ class NotespaceApp(object):
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
             note_id = sorted(self.db.notes.keys())[-1] + 1
-            self.db.create_note(note_id, dict( (key, value)
-                for key, value in request.form.iteritems()))
+            self.db.create_note(note_id, json.loads(request.form['props']))
             self.db.commit()
             return JsonResponse(note_id)
         else:
@@ -43,8 +42,9 @@ class NotespaceApp(object):
         if note_id not in self.db.notes:
             raise NotFound
         if request.method == 'POST':
-            self.db.notes[note_id].props = dict( (key, value)
-                for key, value in request.form.iteritems())
+            props = self.db.notes[note_id].props
+            props.clear()
+            props.update(json.loads(request.form['props']))
             self.db.commit()
         if request.method == 'DELETE':
             self.remove_note(note_id)
