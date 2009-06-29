@@ -76,7 +76,7 @@ class NotespaceApp(object):
 
     def dump_db(self):
         return json.dumps(dict(
-            (note_id, {'props': note.props, 'children': note.children})
+            (note_id, {'props': dict(note.props), 'children': list(note.children)})
             for note_id, note in self.db.notes.iteritems()
         ))
 
@@ -96,13 +96,13 @@ def open_notespace_app(db_path):
     from durus_db import open_durus_db
     db = open_durus_db(db_path)
     app = NotespaceApp(db)
-    app = SharedDataMiddleware(app, {
-        '/static':  path.join(root_path, 'web/static')
-    })
     return app
 
 if __name__ == '__main__':
     app = open_notespace_app(path.join(root_path, 'var/durus.db'))
+    app = SharedDataMiddleware(app, {
+        '/static':  path.join(root_path, 'web/static')
+    })
 
     from werkzeug import run_simple
     run_simple('localhost', 8000, app, use_reloader=True)
