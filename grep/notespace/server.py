@@ -1,13 +1,14 @@
 # encoding: utf-8
 
+import sys
 from os import path
 import json
 from werkzeug import Request, Response, SharedDataMiddleware
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import NotFound
 
-root_path = path.normpath(path.join(path.dirname(__file__), '../../..'))
-
+templates_path = path.join(path.dirname(__file__), 'templates')
+web_media_path = path.join(path.dirname(__file__), 'web_media')
 def JsonResponse(data):
     return Response(json.dumps(data), mimetype='application/json')
 
@@ -16,17 +17,24 @@ class NotespaceApp(object):
         self.db = db
         self.url_map = Map([
             Rule('/', endpoint=self.index),
+            Rule('/media/<filename>', endpoint=self.static),
             Rule('/notes', endpoint=self.notes_index),
             Rule('/notes/<note_id>', endpoint=self.note_page),
             Rule('/notes/<note_id>/children', endpoint=self.note_children),
-            Rule('/static/<file>', endpoint='static', build_only=True),
         ])
 
 
-    def index(self, request):
-        response = Response(mimetype='text/html')
-        response.data = open(path.join(root_path, 'src/templates/index.html')).read()
+    def static(self, request, filename):
+        response = Response(open(path.join(web_media_path, filename)).read())
+        if filename.endswith('.js'):
+            response.mimetype = 'application/javascript'
+        elif filename.endswith('.css'):
+            response.mimetype = 'text/css'
         return response
+
+    def index(self, request):
+        data = open(path.join(templates_path, 'index.html')).read()
+        return Response(data, mimetype='text/html')
 
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
@@ -99,10 +107,10 @@ def open_notespace_app(db_path):
     return app
 
 if __name__ == '__main__':
-    app = open_notespace_app(path.join(root_path, 'var/durus.db'))
-    app = SharedDataMiddleware(app, {
-        '/static':  path.join(root_path, 'web/static')
-    })
+    db_path = path.join(sys.prefix, 'var/durus.db')
+    ext_media_path = path.join(sys.prefix, '../web_ext_media')
+    app = open_notespace_app(db_path)
+    app = SharedDataMiddleware(app, {'/ext_media':  ext_media_path})
 
     from werkzeug import run_simple
     run_simple('localhost', 8000, app, use_reloader=True)
