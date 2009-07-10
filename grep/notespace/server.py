@@ -113,7 +113,7 @@ def open_notespace_app(db_path):
 
 if __name__ == '__main__':
     db_path = path.join(sys.prefix, 'var/durus.db')
-    ext_media_path = path.join(sys.prefix, '../web_ext_media')
+    ext_media_path = path.join(sys.prefix, 'share/web_ext_media')
     app = open_notespace_app(db_path)
     app = SharedDataMiddleware(app, {'/ext_media':  ext_media_path})
 
