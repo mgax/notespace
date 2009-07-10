@@ -30,8 +30,8 @@ class DurusDb(object):
             from demo_db import demo_data
             demo_data(self)
             self.commit()
-    def create_note(self, id, props={}, children=[]):
-        self.notes[id] = Note(id, props, children)
+    def create_note(self, id, props={}, children=[], cls=Note):
+        self.notes[id] = cls(id, props, children)
     #def close(self):
     #    self.db_connection.get_storage().close()
     def commit(self):

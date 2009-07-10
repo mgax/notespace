@@ -10,6 +10,11 @@ class TestDb(demo_db.DemoDb):
     def commit(self):
         self.committed = True
 
+class AjaxTestNote(demo_db.Note):
+    def ajax(self, request):
+        args = json.loads(request.form.get('args'))
+        return server.JsonResponse('-%s-' % str(args['token']))
+
 class TestGetNotes(unittest.TestCase):
     def setUp(self):
         self.db = TestDb()
@@ -62,6 +67,11 @@ class TestGetNotes(unittest.TestCase):
         self.failIf(1 in self.db.notes)
         self.failIf(1 in self.db.notes[0].children)
         self.failIf(2 in self.db.notes)
+
+    def test_ajax(self):
+        self.db.create_note(3, {'html': 'hello html'}, cls=AjaxTestNote)
+        resp = self.client.post('/notes/3/ajax', data={'args': json.dumps({'token': 'asdf'})})
+        self.failUnlessJsonResponse(resp, '-asdf-')
 
 if __name__ == '__main__':
     unittest.main()

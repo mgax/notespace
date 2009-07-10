@@ -7,8 +7,8 @@ class Note(object):
 class DemoDb(object):
     def __init__(self, notes={}):
         self.notes = {}
-    def create_note(self, id, props={}, children=[]):
-        self.notes[id] = Note(id, props, children)
+    def create_note(self, id, props={}, children=[], cls=Note):
+        self.notes[id] = cls(id, props, children)
     def commit(self):
         pass
 

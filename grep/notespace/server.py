@@ -21,6 +21,7 @@ class NotespaceApp(object):
             Rule('/notes', endpoint=self.notes_index),
             Rule('/notes/<note_id>', endpoint=self.note_page),
             Rule('/notes/<note_id>/children', endpoint=self.note_children),
+            Rule('/notes/<note_id>/ajax', endpoint=self.note_ajax),
         ])
 
 
@@ -81,6 +82,10 @@ class NotespaceApp(object):
             self.db.notes[note_id].children = children
             self.db.commit()
         return JsonResponse(list(self.db.notes[note_id].children))
+
+    def note_ajax(self, request, note_id):
+        note_id = int(note_id)
+        return self.db.notes[note_id].ajax(request)
 
     def dump_db(self):
         return json.dumps(dict(
