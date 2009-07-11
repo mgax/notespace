@@ -7,6 +7,7 @@ class Note(object):
 class DemoDb(object):
     def __init__(self, notes={}):
         self.notes = {}
+        self.subscribers = []
     def create_note(self, id, props={}, children=[], cls=Note):
         self.notes[id] = cls(id, props, children)
     def commit(self):
