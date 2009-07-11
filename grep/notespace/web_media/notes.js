@@ -170,4 +170,12 @@ $.Note = function(note_id, note_props, parent_note) {
             });
         });
     });
+
+    if(note_props['html'] != null) {
+        note.addClass('custom_html');
+        var html_container = $('<div class="custom_html_container">');
+        html_container.html(note_props['html'])
+        note.append(html_container);
+    }
+
 }
