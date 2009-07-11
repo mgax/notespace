@@ -1,7 +1,5 @@
-from copy import deepcopy
 import unittest
 import json
-from werkzeug import Client, BaseResponse
 
 from grep.notespace import server, demo_db
 
@@ -10,7 +8,7 @@ class TestDb(demo_db.DemoDb):
     def commit(self):
         self.committed = True
 
-class TestGetNotes(unittest.TestCase):
+class ExportTestCase(unittest.TestCase):
     def setUp(self):
         self.db = TestDb()
         self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])

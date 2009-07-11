@@ -15,7 +15,7 @@ class AjaxTestNote(demo_db.Note):
         args = json.loads(request.form.get('args'))
         return server.JsonResponse('-%s-' % str(args['token']))
 
-class TestGetNotes(unittest.TestCase):
+class WebTestCase(unittest.TestCase):
     def setUp(self):
         self.db = TestDb()
         self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])
