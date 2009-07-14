@@ -46,6 +46,26 @@ class Document(object):
     def commit(self):
         self.db_connection.commit()
 
+    def get_note(self, note_id):
+        return self.notes[note_id]
+
+    def list_note_ids(self):
+        return self.notes.iterkeys()
+
+    def list_notes(self):
+        return self.notes.itervalues()
+
+    def del_note(self, note_id):
+        for child_note_id in self.get_note(note_id).children:
+            self.del_note(child_note_id)
+        self._cleanup_child_links(note_id)
+        del self.notes[note_id]
+
+    def _cleanup_child_links(self, note_id):
+        for note in self.list_notes():
+            if note_id in note.children:
+                note.children.remove(note_id)
+
 def open_document(db_path):
     conn = Connection(FileStorage(db_path))
     new_db = 'notes' not in conn.get_root()

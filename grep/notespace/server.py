@@ -39,38 +39,35 @@ class NotespaceApp(object):
 
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
-            note_id = sorted(self.db.notes.keys())[-1] + 1
+            note_id = sorted(self.db.list_note_ids())[-1] + 1
             self.db.create_note(note_id, json.loads(request.form['props']))
             self.db.commit()
             return JsonResponse(note_id)
         else:
-            return JsonResponse(sorted(self.db.notes.keys()))
+            return JsonResponse(sorted(self.db.list_note_ids()))
 
     def note_page(self, request, note_id):
         note_id = int(note_id)
-        if note_id not in self.db.notes:
-            raise NotFound
+        try:
+            note = self.db.get_note(note_id)
+        except KeyError, e:
+            raise notFound
+
         if request.method == 'POST':
-            props = self.db.notes[note_id].props
+            props = note.props
             props.clear()
             props.update(json.loads(request.form['props']))
             for subscriber in self.db.subscribers:
                 subscriber.notify_props_change(self, note_id)
             self.db.commit()
         if request.method == 'DELETE':
-            self.remove_note(note_id)
+            self.db.del_note(note_id)
             self.db.commit()
             return JsonResponse('ok')
-        return JsonResponse(dict(self.db.notes[note_id].props))
-
-    def remove_note(self, note_id):
-        for kid in self.db.notes[note_id].children:
-            self.remove_note(kid)
-        self.cleanup_child_links(note_id)
-        del self.db.notes[note_id]
+        return JsonResponse(dict(note.props))
 
     def cleanup_child_links(self, note_id):
-        for note in self.db.notes.values():
+        for note in self.db.list_notes():
             if note_id in note.children:
                 note.children.remove(note_id)
 
@@ -81,18 +78,18 @@ class NotespaceApp(object):
             children = json.loads(request.form['children'])
             for kid in children:
                 self.cleanup_child_links(kid)
-            self.db.notes[note_id].children = children
+            self.db.get_note(note_id).children = children
             self.db.commit()
-        return JsonResponse(list(self.db.notes[note_id].children))
+        return JsonResponse(list(self.db.get_note(note_id).children))
 
     def note_ajax(self, request, note_id):
         note_id = int(note_id)
-        return self.db.notes[note_id].ajax(request)
+        return self.db.get_note(note_id).ajax(request)
 
     def dump_db(self):
         return json.dumps(dict(
-            (note_id, {'props': dict(note.props), 'children': list(note.children)})
-            for note_id, note in self.db.notes.iteritems()
+            (note.id, {'props': dict(note.props), 'children': list(note.children)})
+            for note in self.db.list_notes()
         ))
 
     def load_db(self, import_data):
