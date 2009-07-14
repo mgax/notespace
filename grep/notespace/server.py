@@ -13,8 +13,8 @@ def JsonResponse(data):
     return Response(json.dumps(data), mimetype='application/json')
 
 class NotespaceApp(object):
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, doc):
+        self.doc = doc
         self.url_map = Map([
             Rule('/', endpoint=self.index),
             Rule('/media/<filename>', endpoint=self.static),
@@ -39,17 +39,17 @@ class NotespaceApp(object):
 
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
-            note_id = sorted(self.db.list_note_ids())[-1] + 1
-            self.db.create_note(note_id, json.loads(request.form['props']))
-            self.db.commit()
+            note_id = sorted(self.doc.list_note_ids())[-1] + 1
+            self.doc.create_note(note_id, json.loads(request.form['props']))
+            self.doc.commit()
             return JsonResponse(note_id)
         else:
-            return JsonResponse(sorted(self.db.list_note_ids()))
+            return JsonResponse(sorted(self.doc.list_note_ids()))
 
     def note_page(self, request, note_id):
         note_id = int(note_id)
         try:
-            note = self.db.get_note(note_id)
+            note = self.doc.get_note(note_id)
         except KeyError, e:
             raise notFound
 
@@ -57,17 +57,17 @@ class NotespaceApp(object):
             props = note.props
             props.clear()
             props.update(json.loads(request.form['props']))
-            for subscriber in self.db.subscribers:
+            for subscriber in self.doc.subscribers:
                 subscriber.notify_props_change(self, note_id)
-            self.db.commit()
+            self.doc.commit()
         if request.method == 'DELETE':
-            self.db.del_note(note_id)
-            self.db.commit()
+            self.doc.del_note(note_id)
+            self.doc.commit()
             return JsonResponse('ok')
         return JsonResponse(dict(note.props))
 
     def cleanup_child_links(self, note_id):
-        for note in self.db.list_notes():
+        for note in self.doc.list_notes():
             if note_id in note.children:
                 note.children.remove(note_id)
 
@@ -78,13 +78,13 @@ class NotespaceApp(object):
             children = json.loads(request.form['children'])
             for kid in children:
                 self.cleanup_child_links(kid)
-            self.db.get_note(note_id).children = children
-            self.db.commit()
-        return JsonResponse(list(self.db.get_note(note_id).children))
+            self.doc.get_note(note_id).children = children
+            self.doc.commit()
+        return JsonResponse(list(self.doc.get_note(note_id).children))
 
     def note_ajax(self, request, note_id):
         note_id = int(note_id)
-        return self.db.get_note(note_id).ajax(request)
+        return self.doc.get_note(note_id).ajax(request)
 
     @Request.application
     def __call__(self, request):
