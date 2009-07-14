@@ -14,11 +14,11 @@ from durus.btree import BTree
 
 class TestConnection(object):
     def __init__(self):
-        self.root = {}
+        self._root = {}
         self.committed = False
 
     def get_root(self):
-        return self.root
+        return self._root
 
     def commit(self):
         self.committed = True
@@ -82,18 +82,18 @@ class Document(object):
 def open_document(db_path):
     conn = Connection(FileStorage(db_path))
     new_db = 'notes' not in conn.get_root()
-    the_durus_db = Document(conn)
+    doc = Document(conn)
     if new_db:
-        demo_data(self)
-        self.commit()
-    return the_durus_db
+        demo_data(doc)
+        doc.commit()
+    return doc
 
 def create_test_document():
     conn = TestConnection()
-    conn.root['notes'] = BTree()
-    conn.root['subscribers'] = PersistentList()
-    the_durus_db = Document(conn)
-    return the_durus_db
+    conn._root['notes'] = BTree()
+    conn._root['subscribers'] = PersistentList()
+    doc = Document(conn)
+    return doc
 
 def demo_data(doc):
     doc.create_note(0, {'desc': 'ROOT'}, [1, 4])

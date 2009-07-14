@@ -92,17 +92,9 @@ class NotespaceApp(object):
             lambda view, params: view(request, **params),
             catch_http_exceptions=True)
 
-def open_notespace_app(db_path):
+def simple_webserver_main(db_path, ext_media_path, host='localhost', port=8000):
     from document import open_document
-    db = open_document(db_path)
-    app = NotespaceApp(db)
-    return app
-
-if __name__ == '__main__':
-    db_path = path.join(sys.prefix, 'var/durus.db')
-    ext_media_path = path.join(sys.prefix, 'share/web_ext_media')
-    app = open_notespace_app(db_path)
-    app = SharedDataMiddleware(app, {'/ext_media':  ext_media_path})
-
     from werkzeug import run_simple
-    run_simple('localhost', 8000, app, use_reloader=True)
+    app = NotespaceApp(open_document(db_path))
+    app = SharedDataMiddleware(app, {'/ext_media':  ext_media_path})
+    run_simple(host, port, app, use_reloader=True)
