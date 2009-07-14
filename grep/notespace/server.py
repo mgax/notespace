@@ -86,18 +86,6 @@ class NotespaceApp(object):
         note_id = int(note_id)
         return self.db.get_note(note_id).ajax(request)
 
-    def dump_db(self):
-        return json.dumps(dict(
-            (note.id, {'props': dict(note.props), 'children': list(note.children)})
-            for note in self.db.list_notes()
-        ))
-
-    def load_db(self, import_data):
-        self.db.notes.clear()
-        for note_id, note_data in json.loads(import_data).iteritems():
-            self.db.create_note(int(note_id), note_data['props'], note_data['children'])
-        self.db.commit()
-
     @Request.application
     def __call__(self, request):
         return self.url_map.bind_to_environ(request.environ).dispatch(

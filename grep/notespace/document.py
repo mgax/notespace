@@ -1,5 +1,6 @@
 from os import path
 from cStringIO import StringIO
+import json
 import logging
 from logs import null_log
 null_log('durus')
@@ -60,6 +61,18 @@ class Document(object):
             self.del_note(child_note_id)
         self._cleanup_child_links(note_id)
         del self.notes[note_id]
+
+    def dump_db(self):
+        return json.dumps(dict(
+            (note.id, {'props': dict(note.props), 'children': list(note.children)})
+            for note in self.list_notes()
+        ))
+
+    def load_db(self, import_data):
+        self.notes.clear()
+        for note_id, note_data in json.loads(import_data).iteritems():
+            self.create_note(int(note_id), note_data['props'], note_data['children'])
+        self.commit()
 
     def _cleanup_child_links(self, note_id):
         for note in self.list_notes():
