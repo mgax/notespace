@@ -3,12 +3,8 @@ import json
 
 from werkzeug import Client, BaseResponse
 
-from grep.notespace import server, demo_db
-
-class TestDb(demo_db.DemoDb):
-    committed = False
-    def commit(self):
-        self.committed = True
+from grep.notespace import server
+from grep.notespace.document import create_test_document
 
 class TestSubscriber(object):
     def notify_props_change(self, app, note_id):
@@ -16,7 +12,7 @@ class TestSubscriber(object):
 
 class MonitorTestCase(unittest.TestCase):
     def setUp(self):
-        self.db = TestDb()
+        self.db = create_test_document()
         self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.db.create_note(1, {'desc': 'note 1'})
         self.db.create_note(2, {'desc': 'note 2', 'y': 0})
@@ -27,7 +23,7 @@ class MonitorTestCase(unittest.TestCase):
     def test_notify(self):
         test_props = {'desc': 'new content here', 'x': 13}
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
-        self.failUnless(self.db.committed)
+        self.failUnless(self.db.db_connection.committed)
         self.failUnlessEqual(self.db.notes[2].props['y'], 13)
         # TODO: server should tell us what notes were affected
 

@@ -108,8 +108,8 @@ class NotespaceApp(object):
             catch_http_exceptions=True)
 
 def open_notespace_app(db_path):
-    from durus_db import open_durus_db
-    db = open_durus_db(db_path)
+    from document import open_document
+    db = open_document(db_path)
     app = NotespaceApp(db)
     return app
 

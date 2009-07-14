@@ -1,20 +1,16 @@
 import unittest
 import json
 
-from grep.notespace import server, demo_db
-
-class TestDb(demo_db.DemoDb):
-    committed = False
-    def commit(self):
-        self.committed = True
+from grep.notespace import server
+from grep.notespace.document import create_test_document
 
 class ExportTestCase(unittest.TestCase):
     def setUp(self):
-        self.db = TestDb()
-        self.db.create_note(0, {'desc': 'ROOT'}, [1, 2])
-        self.db.create_note(1, {'desc': 'note 1'})
-        self.db.create_note(2, {'desc': 'note 2'})
-        self.app = server.NotespaceApp(self.db)
+        self.doc = create_test_document()
+        self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
+        self.doc.create_note(1, {'desc': 'note 1'})
+        self.doc.create_note(2, {'desc': 'note 2'})
+        self.app = server.NotespaceApp(self.doc)
 
     def test_export(self):
         reference_dump = {
@@ -31,17 +27,17 @@ class ExportTestCase(unittest.TestCase):
             '1': {'props': {'desc': 'one', 'x': 'a'}, 'children': [2]},
             '2': {'props': {'desc': 'two', 'x': 'b'}, 'children': []},
         })
-        self.failIf(self.db.committed)
+        self.failIf(self.doc.db_connection.committed)
         self.app.load_db(import_data)
-        self.failUnless(self.db.committed)
-        db_notes = self.db.notes
+        self.failUnless(self.doc.db_connection.committed)
+        db_notes = self.doc.notes
         self.failUnlessEqual(set(db_notes.keys()), set([0, 1, 2]))
-        self.failUnlessEqual(db_notes[0].props, {'desc': 'ROOT'})
-        self.failUnlessEqual(db_notes[0].children, [1])
-        self.failUnlessEqual(db_notes[1].props, {'desc': 'one', 'x': 'a'})
-        self.failUnlessEqual(db_notes[1].children, [2])
-        self.failUnlessEqual(db_notes[2].props, {'desc': 'two', 'x': 'b'})
-        self.failUnlessEqual(db_notes[2].children, [])
+        self.failUnlessEqual(dict(db_notes[0].props), {'desc': 'ROOT'})
+        self.failUnlessEqual(list(db_notes[0].children), [1])
+        self.failUnlessEqual(dict(db_notes[1].props), {'desc': 'one', 'x': 'a'})
+        self.failUnlessEqual(list(db_notes[1].children), [2])
+        self.failUnlessEqual(dict(db_notes[2].props), {'desc': 'two', 'x': 'b'})
+        self.failUnlessEqual(list(db_notes[2].children), [])
 
 if __name__ == '__main__':
     unittest.main()
