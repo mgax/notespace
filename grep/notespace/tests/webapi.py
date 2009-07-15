@@ -6,7 +6,8 @@ from werkzeug import Client, BaseResponse
 from grep.notespace import server
 from grep.notespace.document import create_test_document, Note
 
-class AjaxTestNote(Note):
+class CustomTestNote(Note):
+    html = '<em>hello custom!</em>'
     def ajax(self, request):
         args = json.loads(request.form.get('args'))
         return server.JsonResponse('-%s-' % str(args['token']))
@@ -29,7 +30,10 @@ class WebTestCase(unittest.TestCase):
         self.failUnlessJsonResponse(self.client.get('/notes'), [0, 1, 2])
 
     def test_get_note(self):
-        self.failUnlessJsonResponse(self.client.get('/notes/0'), {'desc': 'ROOT'})
+        self.failUnlessJsonResponse(self.client.get('/notes/0'), {
+            'props': {'desc': 'ROOT'},
+            'children': [1, 2],
+        })
         self.failUnlessJsonResponse(self.client.get('/notes/0/children'), [1, 2])
 
     def test_change_note(self):
@@ -37,7 +41,7 @@ class WebTestCase(unittest.TestCase):
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
         self.failUnless(self.doc.db_connection.committed)
         self.failUnlessEqual(dict(self.doc.notes[1].props), test_props)
-        self.failUnlessJsonResponse(resp, test_props)
+        self.failUnlessJsonResponse(resp, {'props': test_props, 'children': []})
 
     def test_create_note(self):
         resp = self.client.post('/notes', data={'props': json.dumps({'f': 'g'})})
@@ -64,8 +68,16 @@ class WebTestCase(unittest.TestCase):
         self.failIf(1 in self.doc.notes[0].children)
         self.failIf(2 in self.doc.notes)
 
+    def test_custom_html(self):
+        self.doc.create_note(3, {'a': 'b'}, cls=CustomTestNote)
+        self.failUnlessJsonResponse(self.client.get('/notes/3'), {
+            'props': {'a': 'b'},
+            'children': [],
+            'html': '<em>hello custom!</em>',
+        })
+
     def test_ajax(self):
-        self.doc.create_note(3, {'html': 'hello html'}, cls=AjaxTestNote)
+        self.doc.create_note(3, {'html': 'hello html'}, cls=CustomTestNote)
         resp = self.client.post('/notes/3/ajax', data={'args': json.dumps({'token': 'asdf'})})
         self.failUnlessJsonResponse(resp, '-asdf-')
 

@@ -64,7 +64,13 @@ class NotespaceApp(object):
             self.doc.del_note(note_id)
             self.doc.commit()
             return JsonResponse('ok')
-        return JsonResponse(dict(note.props))
+        note_data = {
+            'props': dict(note.props),
+            'children': list(note.children),
+        }
+        if hasattr(note, 'html'):
+            note_data['html'] = note.html
+        return JsonResponse(note_data)
 
     def cleanup_child_links(self, note_id):
         for note in self.doc.list_notes():
@@ -78,7 +84,7 @@ class NotespaceApp(object):
             children = json.loads(request.form['children'])
             for kid in children:
                 self.cleanup_child_links(kid)
-            self.doc.get_note(note_id).children = children
+            self.doc.get_note(note_id).children[:] = children # todo: test the [:] thing
             self.doc.commit()
         return JsonResponse(list(self.doc.get_note(note_id).children))
 

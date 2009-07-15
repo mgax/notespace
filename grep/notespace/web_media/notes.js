@@ -1,4 +1,5 @@
-$.Note = function(note_id, note_props, parent_note) {
+$.Note = function(note_id, note_data, parent_note) {
+    var note_props = note_data['props']
     var note_this = this;
 
     this.list_children = function() {
@@ -26,7 +27,7 @@ $.Note = function(note_id, note_props, parent_note) {
             $.post('notes/' + note_id + '/children',
                 {children: '['+note_children+']'},
                 function(data) {
-                    new $.Note(child_note_id, child_note_props,
+                    new $.Note(child_note_id, {props: child_note_props},
                         $('ul.children', note)[0]); },
                 'json');
         }, 'json');
@@ -171,10 +172,10 @@ $.Note = function(note_id, note_props, parent_note) {
         });
     });
 
-    if(note_props['html'] != null) {
+    if(note_data['html'] != null) {
         note.addClass('custom_html');
         var html_container = $('<div class="custom_html_container">');
-        html_container.html(note_props['html'])
+        html_container.html(note_data['html'])
         note.append(html_container);
     }
 
