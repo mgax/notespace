@@ -1,17 +1,16 @@
 (function(){
 
 $.new_note = function(note_id, note_data, parent_note) {
-    return new $.Note(note_id, note_data, parent_note);
+    var note = {id: note_id, props: note_data['props']};
+    setup_display(note, note_data['html'], parent_note);
+    setup_move_and_resize(note);
+    setup_props(note);
+    setup_children(note);
+    note.update_display();
+    return note;
 }
 
-$.Note = function(note_id, note_data, parent_note) {
-    var props = note_data['props'];
-    var note = this;
-    note.id = note_id;
-
-    note.list_children = function() {
-        return $('> ul > li.note', note.jq).map(function(){return this.id;}).get();
-    }
+function setup_display(note, note_html, parent_note) {
     note.update_display = function() {
         if($('ul.children.outline li.note').index(note.jq) == -1) {
             note.jq.css({width: note.props['width'], height: note.props['height'],
@@ -24,51 +23,50 @@ $.Note = function(note_id, note_data, parent_note) {
         }
         return false;
     }
-    note.on_add_child = function() {
-        if(block_click_hack) return;
-        var child_note_props = {desc: 'kid'};
-        $.post('notes', {props: $.toJSON(child_note_props)}, function(data) {
-            var child_note_id = data;
-            var note_children = note.list_children();
-            note_children.push(child_note_id);
-            $.post('notes/' + note.id + '/children',
-                {children: '['+note_children+']'},
-                function(data) {
-                    $.new_note(child_note_id, {props: child_note_props},
-                        $('ul.children', note.jq)[0]); },
-                'json');
-        }, 'json');
+    note.on_click_outline = function() {
+        if(note.block_click_hack) return;
+        $('> ul', note.jq).addClass('outline');
+        $('.note', note.jq).trigger('note_update_display');
     }
-    note.edit_begin = function() {
-        if(block_click_hack) return;
-        var view = $('p:first', note.jq);
-        var input = $('<textarea>').append(view.contents());
-        view.replaceWith(input);
-        var done_button = $('<a>').append('done').click(function() {
-            done_button.remove();
-            note.edit_done();
-        });
-        input.after(done_button);
+    note.on_click_box = function() {
+        if(note.block_click_hack) return;
+        $('> ul', note.jq).removeClass('outline');
+        $('.note', note.jq).trigger('note_update_display');
     }
-    note.edit_done = function() {
-        var input = $('textarea', note.jq);
-        var value = input.val();
-        input.val('saving');
-        note.props['desc'] = value;
-        $.post('notes/' + note.id, {props: $.toJSON(note.props)}, function(data) { var view = $('<p>').append(value);
-            view.click(note.edit_begin);
-            input.replaceWith(view);
-        }, 'json');
+
+    note.jq = $('<li>');
+    note.jq.attr('id', note.id).attr('class', 'note');
+    note.jq.data('note', note);
+    note.jq.append($('<div class="buttons">'));
+    note.add_button = function(button_text, click_handler) {
+        var button = $('<a>' + button_text + '</a>').click(click_handler);
+        $('> div.buttons', note.jq).append(button);
     }
+    note.add_button('[o]', note.on_click_outline);
+    note.add_button('[b]', note.on_click_box);
+
+    note.jq.bind('note_update_display', note.update_display);
+
+    if(note_html != null) {
+        note.jq.addClass('custom_html');
+        var html_container = $('<div class="custom_html_container">');
+        html_container.html(note_html);
+        note.jq.append(html_container);
+    }
+
+    $(parent_note).append(note.jq);
+}
+
+function setup_move_and_resize(note) {
     note.after_resize = function() {
         note.props['width'] = parseInt(note.jq.css('width'));
         note.props['height'] = parseInt(note.jq.css('height'));
         $.post('notes/' + note.id, {props: $.toJSON(note.props)});
     }
-    var block_click_hack = false; // hack - dragging causes spurious click event
+    note.block_click_hack = false; // hack - dragging causes spurious click event
     note.do_block_click_hack = function() {
-        setTimeout(function() { block_click_hack = false; }, 1);
-        block_click_hack = true;
+        setTimeout(function() { note.block_click_hack = false; }, 1);
+        note.block_click_hack = true;
     }
     note.after_drag = function() {
         note.props['left'] = parseInt(note.jq.css('left'));
@@ -124,45 +122,65 @@ $.Note = function(note_id, note_data, parent_note) {
             }));
         }
     }
-    note.on_click_outline = function() {
-        if(block_click_hack) return;
-        $('> ul', note.jq).addClass('outline');
-        $('.note', note.jq).trigger('note_update_display');
-    }
-    note.on_click_box = function() {
-        if(block_click_hack) return;
-        $('> ul', note.jq).removeClass('outline');
-        $('.note', note.jq).trigger('note_update_display');
-    }
-    note.on_click_delete = function() {
-        $.ajax({type: 'DELETE', url: 'notes/' + note.id, dataType: "json",
-            success: function(data) { note.jq.remove(); }});
-    }
 
-    note.jq = $('<li>');
-    note.jq.attr('id', note.id).attr('class', 'note');
-
-    note.jq.data('note', note);
-
-    note.jq.append($('<div class="buttons">').append(
-        $('<a>[+]</a>').click(note.on_add_child),
-        $('<a>[o]</a>').click(note.on_click_outline),
-        $('<a>[b]</a>').click(note.on_click_box),
-        $('<a>[x]</a>').click(note.on_click_delete)
-    ));
-
-    note.props = props;
-    note.jq.append( $('<p>').append(note.props['desc']) );
-    $('p:first', note.jq).click(note.edit_begin);
-
-    note.update_display();
-    note.jq.bind('note_update_display', note.update_display)
     note.jq.draggable();
     note.jq.droppable({greedy: true,
         hoverClass: 'drag_hover', activeClass: 'drag_active',
         accept: note.can_drop, drop: note.on_drag_drop});
+}
 
-    $(parent_note).append(note.jq);
+function setup_props(note) {
+    note.edit_begin = function() {
+        if(note.block_click_hack) return;
+        var view = $('p:first', note.jq);
+        var input = $('<textarea>').append(view.contents());
+        view.replaceWith(input);
+        var done_button = $('<a>').append('done').click(function() {
+            done_button.remove();
+            note.edit_done();
+        });
+        input.after(done_button);
+    }
+    note.edit_done = function() {
+        var input = $('textarea', note.jq);
+        var value = input.val();
+        input.val('saving');
+        note.props['desc'] = value;
+        $.post('notes/' + note.id, {props: $.toJSON(note.props)}, function(data) { var view = $('<p>').append(value);
+            view.click(note.edit_begin);
+            input.replaceWith(view);
+        }, 'json');
+    }
+
+    note.jq.append( $('<p>').append(note.props['desc']) );
+    $('p:first', note.jq).click(note.edit_begin);
+}
+
+function setup_children(note) {
+    note.list_children = function() {
+        return $('> ul > li.note', note.jq).map(function(){return this.id;}).get();
+    }
+    note.on_add_child = function() {
+        if(note.block_click_hack) return;
+        var child_note_props = {desc: 'kid'};
+        $.post('notes', {props: $.toJSON(child_note_props)}, function(data) {
+            var child_note_id = data;
+            var note_children = note.list_children();
+            note_children.push(child_note_id);
+            $.post('notes/' + note.id + '/children',
+                {children: '['+note_children+']'},
+                function(data) {
+                    $.new_note(child_note_id, {props: child_note_props},
+                        $('ul.children', note.jq)[0]); },
+                'json');
+        }, 'json');
+    }
+    note.add_button('[+]', note.on_add_child);
+    note.on_click_delete = function() {
+        $.ajax({type: 'DELETE', url: 'notes/' + note.id, dataType: "json",
+            success: function(data) { note.jq.remove(); }});
+    }
+    note.add_button('[x]', note.on_click_delete);
 
     $.getJSON('notes/' + note.id + '/children', function(data) {
         var children_ul = $('<ul class="children">')[0];
@@ -174,13 +192,6 @@ $.Note = function(note_id, note_data, parent_note) {
             });
         });
     });
-
-    if(note_data['html'] != null) {
-        note.jq.addClass('custom_html');
-        var html_container = $('<div class="custom_html_container">');
-        html_container.html(note_data['html'])
-        note.jq.append(html_container);
-    }
 }
 
-})()
+})();
