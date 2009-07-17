@@ -191,7 +191,11 @@ function setup_props(note) {
         var dl = $('<dl class="props">');
         $.each(note.props, function(key) {
             var dd = $('<dd>').text(note.props[key]).editable_field(function(value) {
-                console.log('saving:', key, 'value=', value);
+                if(typeof(note.props[key] == "number"))
+                    // coerce `value` to int
+                    value = value - 0;
+                note.props[key] = value;
+                note.post_props();
             });
             dl.append($('<dt>').text(key), dd);
         });
