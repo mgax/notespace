@@ -34,7 +34,7 @@ class ExportTestCase(unittest.TestCase):
             '2': {'props': {'desc': 'two', 'x': 'b'}, 'children': []},
         })
         self.doc.load_db(import_data)
-        self.doc.db_connection.abort() # checking if transaction was committed
+        self.doc.abort() # checking if transaction was committed
         db_notes = self.doc.notes
         self.failUnlessEqual(set(db_notes.keys()), set([0, 1, 2]))
         self.failUnlessEqual(dict(db_notes[0].props), {'desc': 'ROOT'})

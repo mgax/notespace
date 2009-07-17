@@ -30,7 +30,7 @@ class MonitorTestCase(unittest.TestCase):
     def test_notify(self):
         test_props = {'desc': 'new content here', 'x': 13}
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
-        self.doc.db_connection.abort() # checking if transaction was committed
+        self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(self.doc.get_note(2).props['y'], 13)
         # TODO: server should tell us what notes were affected
 

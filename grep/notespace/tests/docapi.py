@@ -12,6 +12,7 @@ class DocumentApiTestCase(unittest.TestCase):
         self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.doc.create_note(1, {'desc': 'note 1'})
         self.doc.create_note(2, {'desc': 'note 2'})
+        self.doc.commit()
 
     def tearDown(self):
         rmtree(self.test_doc_path)
@@ -41,6 +42,12 @@ class DocumentApiTestCase(unittest.TestCase):
         self.failIf(2 in self.doc.list_note_ids())
         self.failIf(3 in self.doc.list_note_ids())
         self.failIf(2 in self.doc.get_note(0).children)
+
+    def test_link_to_document(self):
+        self.failUnless(self.doc.get_note(1).document is self.doc)
+        self.doc.close()
+        self.doc2 = open_document(path.join(self.test_doc_path, 'test_doc.db'))
+        self.failUnless(self.doc2.get_note(1).document is self.doc2)
 
 if __name__ == '__main__':
     unittest.main()

@@ -45,21 +45,21 @@ class WebTestCase(unittest.TestCase):
     def test_change_note(self):
         test_props = {'desc': 'new content here', 'a': 'b'}
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
-        self.doc.db_connection.abort() # checking if transaction was committed
+        self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(dict(self.doc.notes[1].props), test_props)
         self.failUnlessJsonResponse(resp, {'props': test_props, 'children': []})
 
     def test_create_note(self):
         resp = self.client.post('/notes', data={'props': json.dumps({'f': 'g'})})
         self.failUnlessJsonResponse(resp, 3)
-        self.doc.db_connection.abort() # checking if transaction was committed
+        self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(len(self.doc.notes), 4)
         self.failUnlessEqual(dict(self.doc.notes[3].props), {'f': 'g'})
 
     def test_set_children(self):
         resp = self.client.post('/notes/1/children', data={'children': json.dumps([2])})
         self.failUnlessJsonResponse(resp, [2])
-        self.doc.db_connection.abort() # checking if transaction was committed
+        self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(self.doc.notes[1].children, [2])
         self.failUnlessEqual(self.doc.notes[0].children, [1])
 

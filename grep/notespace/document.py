@@ -13,28 +13,39 @@ from durus.persistent_dict import PersistentDict
 from durus.btree import BTree
 
 class Note(Persistent):
-    def __init__(self, id, props={}, children=[]):
+    def __init__(self, doc, id, props={}, children=[]):
+        self.document = doc
         self.id = id
         self.props = PersistentDict(props)
         self.children = PersistentList(children)
 
-class Document(object):
+_handler_index = {}
+class DocumentHandler(object):
     def __init__(self, db_connection):
         self.db_connection = db_connection
-        db_root = db_connection.get_root()
-        self.notes = db_root.setdefault('notes', BTree())
-        self.subscribers = db_root.setdefault('subscribers', PersistentList())
+        self.doc = db_connection.get_root()['doc']
+        _handler_index[id(self.doc)] = self
+
+    def close(self):
+        del _handler_index[id(self.doc)]
+        self.db_connection.get_storage().close()
+
+    def commit(self): self.db_connection.commit()
+    def abort(self): self.db_connection.abort()
+
+class Document(Persistent):
+    @property
+    def handler(self):
+        return _handler_index[id(self)]
+
+    def __init__(self):
+        self.notes = BTree()
+        self.subscribers = PersistentList()
 
     def create_note(self, id, props={}, children=[], cls=Note):
-        note = cls(id, props, children)
+        note = cls(self, id, props, children)
         self.notes[id] = note
         return note
-
-    #def close(self):
-    #    self.db_connection.get_storage().close()
-
-    def commit(self):
-        self.db_connection.commit()
 
     def get_note(self, note_id):
         return self.notes[note_id]
@@ -61,21 +72,30 @@ class Document(object):
         self.notes.clear()
         for note_id, note_data in json.loads(import_data).iteritems():
             self.create_note(int(note_id), note_data['props'], note_data['children'])
-        self.commit()
+        self.handler.commit()
 
     def _cleanup_child_links(self, note_id):
         for note in self.list_notes():
             if note_id in note.children:
                 note.children.remove(note_id)
 
+    # TODO: deprecate these methods
+    def abort(self): self.handler.abort()
+    def commit(self): self.handler.commit()
+    def close(self): self.handler.close()
+
 def open_document(db_path, demo_data=False):
     conn = Connection(FileStorage(db_path))
-    new_db = 'notes' not in conn.get_root()
-    doc = Document(conn)
+    if 'doc' not in conn.get_root():
+        new_db = True
+        conn.get_root()['doc'] = Document()
+        conn.commit()
+    else:
+        new_db = False
+    h = DocumentHandler(conn)
     if demo_data and new_db:
-        demo_data(doc)
-        doc.commit()
-    return doc
+        demo_data(h.doc)
+    return h.doc
 
 def demo_data(doc):
     doc.create_note(0, {'desc': 'ROOT'}, [1, 4])
@@ -83,3 +103,4 @@ def demo_data(doc):
     doc.create_note(2, {'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100})
     doc.create_note(3, {'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100})
     doc.create_note(4, {'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})
+    doc.commit()
