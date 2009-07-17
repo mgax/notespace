@@ -2,8 +2,18 @@ import unittest
 from os import path
 from tempfile import mkdtemp
 from shutil import rmtree
+from durus.persistent import Persistent
 
 from grep.notespace.document import open_document, Note
+
+class TestSubscriber(Persistent):
+    def __init__(self):
+        self.events = []
+
+    def prop_change(self, note, prop_name, prop_value):
+        self.events.append("note: %d, prop_name: %s, value: %s"
+            % (note.id, repr(prop_name), repr(prop_value)))
+        self._p_note_change()
 
 class DocumentApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -54,6 +64,12 @@ class DocumentApiTestCase(unittest.TestCase):
         n['x'] = 13
         self.failUnlessEqual(n.props['x'], 13)
         self.failUnlessEqual(n['x'], 13)
+
+    def test_prop_change_notify(self):
+        subscriber = TestSubscriber()
+        self.doc.subscribe(subscriber)
+        self.doc.get_note(1)['x'] = 13
+        self.failUnlessEqual(subscriber.events, ["note: 1, prop_name: 'x', value: 13"])
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,6 +21,9 @@ class Note(Persistent):
 
     def __setitem__(self, key, value):
         self.props[key] = value
+        for subscriber in self.document.subscribers:
+            if hasattr(subscriber, 'prop_change'):
+                subscriber.prop_change(self, key, value)
 
     def __getitem__(self, key):
         return self.props[key]
@@ -67,6 +70,9 @@ class Document(Persistent):
             self.del_note(child_note_id)
         self._cleanup_child_links(note_id)
         del self.notes[note_id]
+
+    def subscribe(self, subscriber):
+        self.subscribers.append(subscriber)
 
     def dump_db(self):
         return json.dumps(dict(

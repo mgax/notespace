@@ -57,8 +57,6 @@ class NotespaceApp(object):
             props = note.props
             props.clear()
             props.update(json.loads(request.form['props']))
-            for subscriber in self.doc.subscribers:
-                subscriber.notify_props_change(self, note_id)
             self.doc.commit()
         if request.method == 'DELETE':
             self.doc.del_note(note_id)
