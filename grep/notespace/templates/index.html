@@ -25,7 +25,7 @@ $.getJSON('notes/0/children', function(data) {
     $.each(data, function(item) {
         var note_id = this;
         $.getJSON('notes/' + note_id, function(data) {
-            new $.Note(note_id, data, $('ul#notes')[0]);
+            new $.new_note(note_id, data, $('ul#notes')[0]);
         });
     });
 });
