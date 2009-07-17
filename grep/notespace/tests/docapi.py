@@ -49,5 +49,11 @@ class DocumentApiTestCase(unittest.TestCase):
         self.doc2 = open_document(path.join(self.test_doc_path, 'test_doc.db'))
         self.failUnless(self.doc2.get_note(1).document is self.doc2)
 
+    def test_note_dictlike(self):
+        n = self.doc.get_note(1)
+        n['x'] = 13
+        self.failUnlessEqual(n.props['x'], 13)
+        self.failUnlessEqual(n['x'], 13)
+
 if __name__ == '__main__':
     unittest.main()

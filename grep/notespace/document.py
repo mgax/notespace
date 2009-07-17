@@ -19,6 +19,12 @@ class Note(Persistent):
         self.props = PersistentDict(props)
         self.children = PersistentList(children)
 
+    def __setitem__(self, key, value):
+        self.props[key] = value
+
+    def __getitem__(self, key):
+        return self.props[key]
+
 _handler_index = {}
 class DocumentHandler(object):
     def __init__(self, db_connection):
