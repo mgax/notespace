@@ -1,5 +1,37 @@
 (function(){
 
+$.fn.editable_field = function(on_save) {
+    $.each(this, function() {
+        var view = $(this);
+        view.click(show_edit);
+        var form = null;
+
+        function on_submit() {
+            on_save($('input', form).val());
+            show_view();
+        }
+        function on_cancel() {
+            show_view();
+        }
+        function show_edit() {
+            form = $('<form>').append(
+                $('<input size="6">')
+                    .attr('value', view.text())
+                    .keyup(function(e) {
+                        if(e.keyCode == 27) on_cancel();
+                    })
+                )
+                .submit(function() { try{ on_submit(); } catch(e){} return false; });
+            view.hide().after(form);
+        }
+        function show_view() {
+            if(form != null) { form.remove(); form = null; }
+            view.show();
+        }
+    });
+    return this;
+}
+
 $.new_note = function(note_id, note_data, parent_note) {
     var note = {id: note_id, props: note_data['props']};
     setup_display(note, note_data['html'], parent_note);
@@ -151,6 +183,17 @@ function setup_props(note) {
             input.replaceWith(view);
         }, 'json');
     }
+    note.show_props = function() {
+        var dl = $('<dl class="props">');
+        $.each(note.props, function(key) {
+            var dd = $('<dd>').text(note.props[key]).editable_field(function(value) {
+                console.log('saving:', key, 'value=', value);
+            });
+            dl.append($('<dt>').text(key), dd);
+        });
+        note.jq.append(dl);
+    }
+    note.add_button('[e]', note.show_props);
 
     note.jq.append( $('<p>').append(note.props['desc']) );
     $('p:first', note.jq).click(note.edit_begin);
