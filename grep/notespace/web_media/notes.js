@@ -93,7 +93,7 @@ function setup_move_and_resize(note) {
     note.after_resize = function() {
         note.props['width'] = parseInt(note.jq.css('width'));
         note.props['height'] = parseInt(note.jq.css('height'));
-        $.post('notes/' + note.id, {props: $.toJSON(note.props)});
+        note.post_props();
     }
     note.block_click_hack = false; // hack - dragging causes spurious click event
     note.do_block_click_hack = function() {
@@ -103,7 +103,7 @@ function setup_move_and_resize(note) {
     note.after_drag = function() {
         note.props['left'] = parseInt(note.jq.css('left'));
         note.props['top'] = parseInt(note.jq.css('top'));
-        $.post('notes/' + note.id, {props: $.toJSON(note.props)});
+        note.post_props();
     }
     note.can_drop = function(draggable) {
         if($('.toolbar *').index(draggable) > -1)
@@ -139,8 +139,7 @@ function setup_move_and_resize(note) {
                     function(data) {
                         $.extend(moving_note.props,
                             {left: position.left, top: position.top});
-                        $.post('notes/' + moving_note.id,
-                            {props: $.toJSON(moving_note.props)});
+                        moving_note.post_props();
                     },
                     'json');
             }
@@ -162,6 +161,11 @@ function setup_move_and_resize(note) {
 }
 
 function setup_props(note) {
+    note.post_props = function(callback) {
+        $.post('notes/' + note.id,
+            {props: $.toJSON(note.props)},
+            function(data) { if(callback) callback(); });
+    }
     note.edit_begin = function() {
         if(note.block_click_hack) return;
         var view = $('p:first', note.jq);
@@ -178,7 +182,7 @@ function setup_props(note) {
         var value = input.val();
         input.val('saving');
         note.props['desc'] = value;
-        $.post('notes/' + note.id, {props: $.toJSON(note.props)}, function(data) { var view = $('<p>').append(value);
+        note.post_props(function() {
             view.click(note.edit_begin);
             input.replaceWith(view);
         }, 'json');
