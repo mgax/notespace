@@ -12,17 +12,6 @@ from durus.persistent_list import PersistentList
 from durus.persistent_dict import PersistentDict
 from durus.btree import BTree
 
-class TestConnection(object):
-    def __init__(self):
-        self._root = {}
-        self.committed = False
-
-    def get_root(self):
-        return self._root
-
-    def commit(self):
-        self.committed = True
-
 class Note(Persistent):
     def __init__(self, id, props={}, children=[]):
         self.id = id
@@ -79,20 +68,13 @@ class Document(object):
             if note_id in note.children:
                 note.children.remove(note_id)
 
-def open_document(db_path):
+def open_document(db_path, demo_data=False):
     conn = Connection(FileStorage(db_path))
     new_db = 'notes' not in conn.get_root()
     doc = Document(conn)
-    if new_db:
+    if demo_data and new_db:
         demo_data(doc)
         doc.commit()
-    return doc
-
-def create_test_document():
-    conn = TestConnection()
-    conn._root['notes'] = BTree()
-    conn._root['subscribers'] = PersistentList()
-    doc = Document(conn)
     return doc
 
 def demo_data(doc):

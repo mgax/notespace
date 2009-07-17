@@ -1,10 +1,12 @@
-from copy import deepcopy
 import unittest
+from os import path
+from tempfile import mkdtemp
+from shutil import rmtree
 import json
 from werkzeug import Client, BaseResponse
 
 from grep.notespace import server
-from grep.notespace.document import create_test_document, Note
+from grep.notespace.document import open_document, Note
 
 class CustomTestNote(Note):
     html = '<em>hello custom!</em>'
@@ -14,12 +16,16 @@ class CustomTestNote(Note):
 
 class WebTestCase(unittest.TestCase):
     def setUp(self):
-        self.doc = create_test_document()
+        self.test_doc_path = mkdtemp()
+        self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
         self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.doc.create_note(1, {'desc': 'note 1'})
         self.doc.create_note(2, {'desc': 'note 2'})
         self.app = server.NotespaceApp(self.doc)
         self.client = Client(self.app, BaseResponse)
+
+    def tearDown(self):
+        rmtree(self.test_doc_path)
 
     def failUnlessJsonResponse(self, resp, json_data):
         self.failUnlessEqual(resp.status_code, 200)
@@ -39,21 +45,21 @@ class WebTestCase(unittest.TestCase):
     def test_change_note(self):
         test_props = {'desc': 'new content here', 'a': 'b'}
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
-        self.failUnless(self.doc.db_connection.committed)
+        self.doc.db_connection.abort() # checking if transaction was committed
         self.failUnlessEqual(dict(self.doc.notes[1].props), test_props)
         self.failUnlessJsonResponse(resp, {'props': test_props, 'children': []})
 
     def test_create_note(self):
         resp = self.client.post('/notes', data={'props': json.dumps({'f': 'g'})})
         self.failUnlessJsonResponse(resp, 3)
-        self.failUnless(self.doc.db_connection.committed)
+        self.doc.db_connection.abort() # checking if transaction was committed
         self.failUnlessEqual(len(self.doc.notes), 4)
         self.failUnlessEqual(dict(self.doc.notes[3].props), {'f': 'g'})
 
     def test_set_children(self):
         resp = self.client.post('/notes/1/children', data={'children': json.dumps([2])})
         self.failUnlessJsonResponse(resp, [2])
-        self.failUnless(self.doc.db_connection.committed)
+        self.doc.db_connection.abort() # checking if transaction was committed
         self.failUnlessEqual(self.doc.notes[1].children, [2])
         self.failUnlessEqual(self.doc.notes[0].children, [1])
 

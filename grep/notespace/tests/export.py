@@ -1,15 +1,22 @@
 import unittest
+from os import path
+from tempfile import mkdtemp
+from shutil import rmtree
 import json
 
 from grep.notespace import server
-from grep.notespace.document import create_test_document
+from grep.notespace.document import open_document
 
 class ExportTestCase(unittest.TestCase):
     def setUp(self):
-        self.doc = create_test_document()
+        self.test_doc_path = mkdtemp()
+        self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
         self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.doc.create_note(1, {'desc': 'note 1'})
         self.doc.create_note(2, {'desc': 'note 2'})
+
+    def tearDown(self):
+        rmtree(self.test_doc_path)
 
     def test_export(self):
         reference_dump = {
@@ -26,9 +33,8 @@ class ExportTestCase(unittest.TestCase):
             '1': {'props': {'desc': 'one', 'x': 'a'}, 'children': [2]},
             '2': {'props': {'desc': 'two', 'x': 'b'}, 'children': []},
         })
-        self.failIf(self.doc.db_connection.committed)
         self.doc.load_db(import_data)
-        self.failUnless(self.doc.db_connection.committed)
+        self.doc.db_connection.abort() # checking if transaction was committed
         db_notes = self.doc.notes
         self.failUnlessEqual(set(db_notes.keys()), set([0, 1, 2]))
         self.failUnlessEqual(dict(db_notes[0].props), {'desc': 'ROOT'})

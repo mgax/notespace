@@ -1,13 +1,20 @@
 import unittest
+from os import path
+from tempfile import mkdtemp
+from shutil import rmtree
 
-from grep.notespace.document import create_test_document, Note
+from grep.notespace.document import open_document, Note
 
 class DocumentApiTestCase(unittest.TestCase):
     def setUp(self):
-        self.doc = create_test_document()
+        self.test_doc_path = mkdtemp()
+        self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
         self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
         self.doc.create_note(1, {'desc': 'note 1'})
         self.doc.create_note(2, {'desc': 'note 2'})
+
+    def tearDown(self):
+        rmtree(self.test_doc_path)
 
     def test_get_note(self):
         note = self.doc.get_note(1)
