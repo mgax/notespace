@@ -3,7 +3,7 @@ body > ul { float: left; padding: 0; margin: 0;  }
 li.note { background-color: #669; border: 1px solid #446;
     position: absolute; overflow: hidden; padding: .2em; }
 ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
-li.note > .buttons { position: absolute; right: .1em; top: .1em; }
+div.buttons { position: absolute; right: .1em; top: .1em; }
 li.note > p { margin: 0; }
 ul.children { list-style-type: none; }
 ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
