@@ -1,40 +1,22 @@
 (function(){
 
-$.fn.editable_field = function(on_save) {
-    $.each(this, function() {
-        var view = $(this);
-        view.click(show_edit);
-        var form = null;
-
-        function on_submit() {
-            on_save($('input', form).val());
-            show_view();
-        }
-        function on_cancel() {
-            show_view();
-        }
-        function show_edit() {
-            form = $('<form>').append(
-                $('<input size="6">')
-                    .attr('value', view.text())
-                    .keyup(function(e) {
-                        if(e.keyCode == 27) on_cancel();
-                    })
-                )
-                .submit(function() { try{ on_submit(); } catch(e){} return false; });
-            view.hide().after(form);
-        }
-        function show_view() {
-            if(form != null) { form.remove(); form = null; }
-            view.show();
-        }
+cork_ui.load_note = function(note_id, jq, callback) {
+    cork_ui._get_note_model(note_id, function(note_model) {
+        var note = make_note(note_id, note_model, jq);
+        if(callback) callback(note.jq);
     });
-    return this;
 }
 
-$.new_note = function(note_id, note_data, parent_note) {
-    var note = {id: note_id, props: note_data['props']};
-    setup_display(note, note_data['html'], parent_note);
+function create_new_note(parent_note_model, jq, callback) {
+    var note_model = cork_ui._new_note_model(parent_note_model, function(note_model) {
+        var note = make_note(note_model.get_id(), note_model, jq)
+        if(callback) callback(note.jq);
+    });
+}
+
+function make_note(note_id, note_model, jq) {
+    var note = {id: note_id, model: note_model};
+    setup_display(note, note.model.get_html(), jq);
     setup_move_and_resize(note);
     setup_props(note);
     setup_children(note);
@@ -42,11 +24,15 @@ $.new_note = function(note_id, note_data, parent_note) {
     return note;
 }
 
-function setup_display(note, note_html, parent_note) {
+function setup_display(note, note_html, jq) {
     note.update_display = function() {
         if($('ul.children.outline li.note').index(note.jq) == -1) {
-            note.jq.css({width: note.props['width'], height: note.props['height'],
-                left: note.props['left'], top: note.props['top']});
+            note.jq.css({
+                width: note.model.get_prop('width'),
+                height: note.model.get_prop('height'),
+                left: note.model.get_prop('left'),
+                top: note.model.get_prop('top')
+            });
             note.jq.resizable({stop: note.after_resize});
         }
         else {
@@ -66,7 +52,7 @@ function setup_display(note, note_html, parent_note) {
         $('.note', note.jq).trigger('note_update_display');
     }
 
-    note.jq = $('<li>');
+    note.jq = jq; // TODO: check that jq is [<li>]
     note.jq.attr('id', note.id).attr('class', 'note');
     note.jq.data('note', note);
     note.jq.append($('<div class="buttons">'));
@@ -85,15 +71,12 @@ function setup_display(note, note_html, parent_note) {
         html_container.html(note_html);
         note.jq.append(html_container);
     }
-
-    $(parent_note).append(note.jq);
 }
 
 function setup_move_and_resize(note) {
     note.after_resize = function() {
-        note.props['width'] = parseInt(note.jq.css('width'));
-        note.props['height'] = parseInt(note.jq.css('height'));
-        note.post_props();
+        note.model.set_prop('width', parseInt(note.jq.css('width')));
+        note.model.set_prop('height', parseInt(note.jq.css('height')));
     }
     note.block_click_hack = false; // hack - dragging causes spurious click event
     note.do_block_click_hack = function() {
@@ -101,9 +84,8 @@ function setup_move_and_resize(note) {
         note.block_click_hack = true;
     }
     note.after_drag = function() {
-        note.props['left'] = parseInt(note.jq.css('left'));
-        note.props['top'] = parseInt(note.jq.css('top'));
-        note.post_props();
+        note.model.set_prop('left', parseInt(note.jq.css('left')));
+        note.model.set_prop('top', parseInt(note.jq.css('top')));
     }
     note.can_drop = function(draggable) {
         if($('.toolbar *').index(draggable) > -1)
@@ -133,15 +115,9 @@ function setup_move_and_resize(note) {
                     left: ui.position.left - here_offset.left + parent_offset.left
                 }
                 $('> ul', note.jq).append(ui.draggable.css(position));
-                var note_children = note.list_children();
-                $.post('notes/' + note.id + '/children',
-                    {children: '['+note_children+']'},
-                    function(data) {
-                        $.extend(moving_note.props,
-                            {left: position.left, top: position.top});
-                        moving_note.post_props();
-                    },
-                    'json');
+                note.model.add_child(moving_note.model);
+                moving_note.model.set_prop('left', position.left);
+                moving_note.model.set_prop('top', position.top);
             }
         }
         else {
@@ -161,11 +137,6 @@ function setup_move_and_resize(note) {
 }
 
 function setup_props(note) {
-    note.post_props = function(callback) {
-        $.post('notes/' + note.id,
-            {props: $.toJSON(note.props)},
-            function(data) { if(callback) callback(); });
-    }
     note.edit_begin = function() {
         if(note.block_click_hack) return;
         var view = $('p:first', note.jq);
@@ -181,11 +152,10 @@ function setup_props(note) {
         var input = $('textarea', note.jq);
         var value = input.val();
         input.val('saving');
-        note.props['desc'] = value;
-        note.post_props(function() {
+        note.model.set_prop('desc', value, function() {
             view.click(note.edit_begin);
             input.replaceWith(view);
-        }, 'json');
+        });
     }
     note.show_props = function() {
         var dl = $('<dl class="props">');
@@ -198,7 +168,8 @@ function setup_props(note) {
             $('<a>[x]</a>').click(function() { dl.remove(); }),
             $('<a>[+]</a>').click(function() { dialog.dialog('open'); })
         ));
-        $.each(note.props, function(key) { add_prop_to_list(key, note.props[key]); });
+        var note_props = note.model.get_all_props();
+        $.each(note_props, function(key) { add_prop_to_list(key, note_props[key]); });
 
         var dialog = $('div.new_prop_dialog', note.jq).dialog({
             autoOpen: false,
@@ -206,7 +177,7 @@ function setup_props(note) {
             buttons: {
                 create: function() {
                     var name = $('input[name=name]', dialog).val();
-                    var value = $('input[name=value]', dialog).val()
+                    var value = $('input[name=value]', dialog).val();
                     set_prop(name, value, function() { add_prop_to_list(name, value); });
                     $(this).dialog('close');
                 },
@@ -222,55 +193,35 @@ function setup_props(note) {
         }
 
         function set_prop(name, new_value, callback) {
-            if(typeof(note.props[name]) == "number") {
+            if(typeof(note.model.get_prop(name)) == "number") {
                 // coerce `value` to int
                 new_value = new_value - 0;
             }
-            note.props[name] = new_value;
-            note.post_props(callback);
+            note.model.set_prop(name, new_value, callback);
         }
     }
     note.add_button('[e]', note.show_props);
 
-    note.jq.append( $('<p>').append(note.props['desc']) );
+    note.jq.append( $('<p>').append(note.model.get_prop('desc')) );
     $('p:first', note.jq).click(note.edit_begin);
 }
 
 function setup_children(note) {
-    note.list_children = function() {
-        return $('> ul > li.note', note.jq).map(function(){return this.id;}).get();
-    }
     note.on_add_child = function() {
         if(note.block_click_hack) return;
-        var child_note_props = {desc: 'kid'};
-        $.post('notes', {props: $.toJSON(child_note_props)}, function(data) {
-            var child_note_id = data;
-            var note_children = note.list_children();
-            note_children.push(child_note_id);
-            $.post('notes/' + note.id + '/children',
-                {children: '['+note_children+']'},
-                function(data) {
-                    $.new_note(child_note_id, {props: child_note_props},
-                        $('ul.children', note.jq)[0]); },
-                'json');
-        }, 'json');
+        var child_jq = $('<li>').appendTo(children_container);
+        create_new_note(note.model, child_jq);
     }
     note.add_button('[+]', note.on_add_child);
     note.on_click_delete = function() {
-        $.ajax({type: 'DELETE', url: 'notes/' + note.id, dataType: "json",
-            success: function(data) { note.jq.remove(); }});
+        note.model.delete(function() { note.jq.remove(); });
     }
     note.add_button('[x]', note.on_click_delete);
 
-    $.getJSON('notes/' + note.id + '/children', function(data) {
-        var children_ul = $('<ul class="children">')[0];
-        note.jq.append(children_ul);
-        $.each(data, function(item) {
-            var child_note_id = this;
-            $.getJSON('notes/' + child_note_id, function(data) {
-                $.new_note(child_note_id, data, children_ul);
-            });
-        });
+    var children_container = $('<ul class="children">').appendTo(note.jq);
+    $.each(note.model.get_children(), function(i, child_id) {
+        var child_jq = $('<li>').appendTo(children_container);
+        cork_ui.load_note(child_id, child_jq);
     });
 }
 

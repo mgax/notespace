@@ -10,6 +10,8 @@
     <script type="text/javascript" src="ext_media/jq/ui/ui.droppable.js"></script>
     <script type="text/javascript" src="ext_media/jq/ui/ui.resizable.js"></script>
     <script type="text/javascript" src="ext_media/jq/ui/ui.dialog.js"></script>
+    <script type="text/javascript" src="media/utils.js"></script>
+    <script type="text/javascript" src="media/note_model.js"></script>
     <script type="text/javascript" src="media/notes.js"></script>
 </head>
 <body>
@@ -24,14 +26,16 @@
 
 </body>
 <script type="text/javascript"><!--
-$.getJSON('notes/0/children', function(data) {
-    $.each(data, function(item) {
-        var note_id = this;
-        $.getJSON('notes/' + note_id, function(data) {
-            new $.new_note(note_id, data, $('ul#notes')[0]);
-        });
+
+cork_ui._get_note_model(0, function(root_note_model) {
+    var notes_container = $('ul#notes');
+    $.each(root_note_model.get_children(), function(i, note_id) {
+        var note_jq = $('<li>').appendTo(notes_container);
+        cork_ui.load_note(note_id, note_jq);
     });
 });
-$('.toolbar .button').draggable({helper: 'clone'});
+
+//$('.toolbar .button').draggable({helper: 'clone'});
+
 --></script>
 </html>
