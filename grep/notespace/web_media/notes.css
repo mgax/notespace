@@ -3,10 +3,12 @@ body > ul { float: left; padding: 0; margin: 0;  }
 li.note { background-color: #669; border: 1px solid #446;
     position: absolute; overflow: hidden; padding: .2em; }
 ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
-div.buttons { position: absolute; right: .1em; top: .1em; }
+div.buttons { float: right; }
 li.note > div.contents > p { margin: 0; }
 ul.children { list-style-type: none; }
-ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
+ul.children.outline, ul.children.outline ul.children {
+    position: absolute; top: 2em; bottom: .5em; right: .5em; left: .5em;
+    overflow-y: auto; list-style-type: disc; }
 div.toolbar { background-color: #037; opacity: 0.5;
     float: right; width: 150px; height: 400px; padding: 1em; }
 div.button { background-color: #777; text-align: center;
@@ -14,6 +16,6 @@ div.button { background-color: #777; text-align: center;
 li.note.drag_active { border-color: #880; }
 li.note.drag_hover { border-color: #7f7; }
 li.note.ui-draggable-dragging { z-index: 1; }
-dl.props { position: fixed; top: 0; right: 0; margin: .2em; padding: .5em; width: 10em;
+dl.props { position: fixed; top: 0; right: 0; margin: .2em; padding: .5em; width: 13em;
     border: 1px solid green; background-color: #dd5; font-family: Monaco; font-size: 10pt; }
 dl.props dt { float: left; width: 5em; color: #555; }
