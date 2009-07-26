@@ -96,20 +96,16 @@ class Document(Persistent):
     def commit(self): self.handler.commit()
     def close(self): self.handler.close()
 
-def open_document(db_path, demo_data=False):
+def open_document(db_path):
     conn = Connection(FileStorage(db_path))
     if 'doc' not in conn.get_root():
-        new_db = True
         conn.get_root()['doc'] = Document()
         conn.commit()
-    else:
-        new_db = False
     h = DocumentHandler(conn)
-    if demo_data and new_db:
-        demo_data(h.doc)
     return h.doc
 
 def demo_data(doc):
+    # TODO: clear the document
     doc.create_note(0, {'desc': 'ROOT'}, [1, 4])
     doc.create_note(1, {'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300}, [2, 3])
     doc.create_note(2, {'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100})

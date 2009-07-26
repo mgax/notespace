@@ -3,7 +3,7 @@
 import sys
 from os import path
 import json
-from werkzeug import Request, Response, SharedDataMiddleware
+from werkzeug import Request, Response
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import NotFound
 
@@ -51,7 +51,7 @@ class NotespaceApp(object):
         try:
             note = self.doc.get_note(note_id)
         except KeyError, e:
-            raise notFound
+            raise NotFound
 
         if request.method == 'POST':
             props = note.props
@@ -95,10 +95,3 @@ class NotespaceApp(object):
         return self.url_map.bind_to_environ(request.environ).dispatch(
             lambda view, params: view(request, **params),
             catch_http_exceptions=True)
-
-def simple_webserver_main(db_path, ext_media_path, host='localhost', port=8000):
-    from document import open_document
-    from werkzeug import run_simple
-    app = NotespaceApp(open_document(db_path))
-    app = SharedDataMiddleware(app, {'/ext_media':  ext_media_path})
-    run_simple(host, port, app, use_reloader=True)
