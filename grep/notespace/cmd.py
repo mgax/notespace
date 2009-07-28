@@ -3,16 +3,21 @@ def bootstrap():
     from os import path
     from ConfigParser import ConfigParser
     from document import open_document, demo_data
+    from optparse import OptionParser
 
-    cfg_path = sys.argv[1]
+    parser = OptionParser()
+    parser.add_option('-q', '--quiet', action='store_true', dest='quiet')
+    options, args = parser.parse_args()
+
+    cfg_path = args[0]
     parser = ConfigParser()
     parser.read(cfg_path)
     dbfile = parser.get('cork', 'dbfile')
 
     doc = open_document(dbfile)
 
-    if len(sys.argv) > 2:
-        cmd = sys.argv[2]
+    if len(args) > 1:
+        cmd = args[1]
     else:
         cmd = 'serve'
 
@@ -23,13 +28,22 @@ def bootstrap():
         from werkzeug import run_simple, SharedDataMiddleware
         from server import NotespaceApp
 
+        if options.quiet:
+            from werkzeug.serving import BaseRequestHandler
+            class QuietHandler(BaseRequestHandler):
+                def log_request(self, *args, **kwargs):
+                    pass
+            handler = QuietHandler
+        else:
+            handler = None
+
         app = NotespaceApp(doc)
         host = parser.get('testserver', 'host')
         port = parser.getint('testserver', 'port')
         media_section = parser.get('testserver', 'staticmedia')
         static_media = dict(parser.items(media_section))
         app = SharedDataMiddleware(app, static_media)
-        run_simple(host, port, app, use_reloader=True)
+        run_simple(host, port, app, use_reloader=True, request_handler=handler)
         print # a blank line
 
     elif cmd == 'interact':
