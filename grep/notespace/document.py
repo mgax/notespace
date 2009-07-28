@@ -85,18 +85,6 @@ class Document(Persistent):
     def subscribe(self, subscriber):
         self.subscribers.append(subscriber)
 
-    def dump_db(self):
-        return json.dumps(dict(
-            (note.id, {'props': dict(note), 'children': list(note.children_ids())})
-            for note in self.list_notes()
-        ))
-
-    def load_db(self, import_data):
-        self.notes.clear()
-        for note_id, note_data in json.loads(import_data).iteritems():
-            self.create_note(int(note_id), note_data['props'], note_data['children'])
-        self.handler.commit()
-
     def _cleanup_child_links(self, note_id):
         for note in self.list_notes():
             if note_id in note._children:
