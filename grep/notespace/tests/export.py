@@ -37,12 +37,12 @@ class ExportTestCase(unittest.TestCase):
         self.doc.abort() # checking if transaction was committed
         db_notes = self.doc.notes
         self.failUnlessEqual(set(db_notes.keys()), set([0, 1, 2]))
-        self.failUnlessEqual(dict(db_notes[0].props), {'desc': 'ROOT'})
-        self.failUnlessEqual(list(db_notes[0].children), [1])
-        self.failUnlessEqual(dict(db_notes[1].props), {'desc': 'one', 'x': 'a'})
-        self.failUnlessEqual(list(db_notes[1].children), [2])
-        self.failUnlessEqual(dict(db_notes[2].props), {'desc': 'two', 'x': 'b'})
-        self.failUnlessEqual(list(db_notes[2].children), [])
+        self.failUnlessEqual(dict(db_notes[0]), {'desc': 'ROOT'})
+        self.failUnlessEqual(list(db_notes[0].children_ids()), [1])
+        self.failUnlessEqual(dict(db_notes[1]), {'desc': 'one', 'x': 'a'})
+        self.failUnlessEqual(list(db_notes[1].children_ids()), [2])
+        self.failUnlessEqual(dict(db_notes[2]), {'desc': 'two', 'x': 'b'})
+        self.failUnlessEqual(list(db_notes[2].children_ids()), [])
 
 if __name__ == '__main__':
     unittest.main()

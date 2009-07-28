@@ -54,7 +54,7 @@ class NotespaceApp(object):
             raise NotFound
 
         if request.method == 'POST':
-            props = note.props
+            props = note._props
             props.clear()
             props.update(json.loads(request.form['props']))
             self.doc.commit()
@@ -63,8 +63,8 @@ class NotespaceApp(object):
             self.doc.commit()
             return JsonResponse('ok')
         note_data = {
-            'props': dict(note.props),
-            'children': list(note.children),
+            'props': dict(note),
+            'children': list(note.children_ids()),
         }
         if hasattr(note, 'html'):
             note_data['html'] = note.html
@@ -72,8 +72,8 @@ class NotespaceApp(object):
 
     def cleanup_child_links(self, note_id):
         for note in self.doc.list_notes():
-            if note_id in note.children:
-                note.children.remove(note_id)
+            if note_id in note.children_ids():
+                note._children.remove(note_id)
 
     def note_children(self, request, note_id):
         note_id = int(note_id)
@@ -82,9 +82,9 @@ class NotespaceApp(object):
             children = json.loads(request.form['children'])
             for kid in children:
                 self.cleanup_child_links(kid)
-            self.doc.get_note(note_id).children[:] = children # todo: test the [:] thing
+            self.doc.get_note(note_id)._children[:] = children # todo: test the [:] thing
             self.doc.commit()
-        return JsonResponse(list(self.doc.get_note(note_id).children))
+        return JsonResponse(list(self.doc.get_note(note_id).children_ids()))
 
     def note_ajax(self, request, note_id):
         note_id = int(note_id)

@@ -46,7 +46,7 @@ class WebTestCase(unittest.TestCase):
         test_props = {'desc': 'new content here', 'a': 'b'}
         resp = self.client.post('/notes/1', data={'props': json.dumps(test_props)})
         self.doc.abort() # checking if transaction was committed
-        self.failUnlessEqual(dict(self.doc.notes[1].props), test_props)
+        self.failUnlessEqual(dict(self.doc.notes[1]), test_props)
         self.failUnlessJsonResponse(resp, {'props': test_props, 'children': []})
 
     def test_create_note(self):
@@ -54,24 +54,24 @@ class WebTestCase(unittest.TestCase):
         self.failUnlessJsonResponse(resp, 3)
         self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(len(self.doc.notes), 4)
-        self.failUnlessEqual(dict(self.doc.notes[3].props), {'f': 'g'})
+        self.failUnlessEqual(dict(self.doc.notes[3]), {'f': 'g'})
 
     def test_set_children(self):
         resp = self.client.post('/notes/1/children', data={'children': json.dumps([2])})
         self.failUnlessJsonResponse(resp, [2])
         self.doc.abort() # checking if transaction was committed
-        self.failUnlessEqual(self.doc.notes[1].children, [2])
-        self.failUnlessEqual(self.doc.notes[0].children, [1])
+        self.failUnlessEqual(list(self.doc.notes[1].children_ids()), [2])
+        self.failUnlessEqual(list(self.doc.notes[0].children_ids()), [1])
 
     def test_remove_note(self):
         self.client.post('/notes/1/children', data={'children': json.dumps([2]) })
         self.failUnless(1 in self.doc.notes)
-        self.failUnless(2 in self.doc.notes[1].children)
+        self.failUnless(2 in list(self.doc.notes[1].children_ids()))
 
         resp = self.client.delete('/notes/1')
         self.failUnlessJsonResponse(resp, 'ok')
         self.failIf(1 in self.doc.notes)
-        self.failIf(1 in self.doc.notes[0].children)
+        self.failIf(1 in list(self.doc.notes[0].children_ids()))
         self.failIf(2 in self.doc.notes)
 
     def test_custom_html(self):

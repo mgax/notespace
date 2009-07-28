@@ -16,17 +16,28 @@ class Note(Persistent):
     def __init__(self, doc, id, props={}, children=[]):
         self.document = doc
         self.id = id
-        self.props = PersistentDict(props)
-        self.children = PersistentList(children)
+        self._props = PersistentDict(props)
+        self._children = PersistentList(children)
 
     def __setitem__(self, key, value):
-        self.props[key] = value
+        self._props[key] = value
         for subscriber in self.document.subscribers:
             if hasattr(subscriber, 'prop_change'):
                 subscriber.prop_change(self, key, value)
 
     def __getitem__(self, key):
-        return self.props[key]
+        return self._props[key]
+
+    def keys(self):
+        return self._props.keys()
+
+    def children_ids(self):
+        for child_id in self._children:
+            yield child_id
+
+    def children(self):
+        for child_id in self._children:
+            yield self.document.get_note(child_id)
 
 _handler_index = {}
 class DocumentHandler(object):
@@ -66,7 +77,7 @@ class Document(Persistent):
         return self.notes.itervalues()
 
     def del_note(self, note_id):
-        for child_note_id in self.get_note(note_id).children:
+        for child_note_id in self.get_note(note_id)._children:
             self.del_note(child_note_id)
         self._cleanup_child_links(note_id)
         del self.notes[note_id]
@@ -76,7 +87,7 @@ class Document(Persistent):
 
     def dump_db(self):
         return json.dumps(dict(
-            (note.id, {'props': dict(note.props), 'children': list(note.children)})
+            (note.id, {'props': dict(note), 'children': list(note.children_ids())})
             for note in self.list_notes()
         ))
 
@@ -88,8 +99,8 @@ class Document(Persistent):
 
     def _cleanup_child_links(self, note_id):
         for note in self.list_notes():
-            if note_id in note.children:
-                note.children.remove(note_id)
+            if note_id in note._children:
+                note._children.remove(note_id)
 
     # TODO: deprecate these methods
     def abort(self): self.handler.abort()

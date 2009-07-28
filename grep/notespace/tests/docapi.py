@@ -30,7 +30,7 @@ class DocumentApiTestCase(unittest.TestCase):
     def test_get_note(self):
         note = self.doc.get_note(1)
         self.failUnlessEqual(note.id, 1)
-        self.failUnlessEqual(note.props['desc'], 'note 1')
+        self.failUnlessEqual(note['desc'], 'note 1')
 
     def test_list_note_ids(self):
         self.failUnlessEqual(sorted(list(self.doc.list_note_ids())), [0, 1, 2])
@@ -40,18 +40,18 @@ class DocumentApiTestCase(unittest.TestCase):
         for note in self.doc.list_notes():
             notes[note.id] = note
         self.failUnlessEqual(sorted(notes.keys()), [0, 1, 2])
-        self.failUnlessEqual(notes[0].props['desc'], 'ROOT')
+        self.failUnlessEqual(notes[0]['desc'], 'ROOT')
 
     def test_remove_note(self):
         self.doc.create_note(3, {'desc': 'note 3'})
-        self.doc.get_note(2).children.append(3)
+        self.doc.get_note(2)._children.append(3)
         self.failUnless(2 in self.doc.list_note_ids())
         self.failUnless(3 in self.doc.list_note_ids())
-        self.failUnless(2 in self.doc.get_note(0).children)
+        self.failUnless(2 in self.doc.get_note(0)._children)
         self.doc.del_note(2)
         self.failIf(2 in self.doc.list_note_ids())
         self.failIf(3 in self.doc.list_note_ids())
-        self.failIf(2 in self.doc.get_note(0).children)
+        self.failIf(2 in self.doc.get_note(0)._children)
 
     def test_link_to_document(self):
         self.failUnless(self.doc.get_note(1).document is self.doc)
@@ -62,14 +62,25 @@ class DocumentApiTestCase(unittest.TestCase):
     def test_note_dictlike(self):
         n = self.doc.get_note(1)
         n['x'] = 13
-        self.failUnlessEqual(n.props['x'], 13)
         self.failUnlessEqual(n['x'], 13)
+        self.failUnlessEqual(n['x'], 13)
+        self.failUnlessEqual(dict(n), {'x': 13, 'desc': 'note 1'})
 
     def test_prop_change_notify(self):
         subscriber = TestSubscriber()
         self.doc.subscribe(subscriber)
         self.doc.get_note(1)['x'] = 13
         self.failUnlessEqual(subscriber.events, ["note: 1, prop_name: 'x', value: 13"])
+
+    def test_children_ids(self):
+        self.failUnlessEqual(list(self.doc.get_note(0).children_ids()), [1, 2])
+
+    def test_iter_children(self):
+        child_ids = []
+        for child in self.doc.get_note(0).children():
+            self.failUnless(child is self.doc.get_note(child.id))
+            child_ids.append(child.id)
+        self.failUnlessEqual(child_ids, [1, 2])
 
 if __name__ == '__main__':
     unittest.main()
