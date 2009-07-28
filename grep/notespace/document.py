@@ -61,10 +61,19 @@ class Document(Persistent):
     def __init__(self):
         self.notes = BTree()
         self.subscribers = PersistentList()
+        self.notes[0] = Note(self, 0, {'desc': 'ROOT'})
 
-    def create_note(self, id, props={}, children=[], cls=Note):
+    def create_note(self, props={}, children=[], cls=Note, parent_id=0, id=None):
+        if id is None:
+            if self.notes:
+                id = max(self.list_note_ids()) + 1
+            else:
+                id = 0
+        if id in self.notes:
+            raise ValueError('Note id "%s" already in use' % id)
         note = cls(self, id, props, children)
         self.notes[id] = note
+        self.notes[parent_id]._children.append(note.id)
         return note
 
     def get_note(self, note_id):
@@ -105,9 +114,8 @@ def open_document(db_path):
 
 def demo_data(doc):
     # TODO: clear the document
-    doc.create_note(0, {'desc': 'ROOT'}, [1, 4])
-    doc.create_note(1, {'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300}, [2, 3])
-    doc.create_note(2, {'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100})
-    doc.create_note(3, {'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100})
-    doc.create_note(4, {'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})
+    doc.create_note({'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300}, [2, 3])
+    doc.create_note({'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100}, parent_id=0)
+    doc.create_note({'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100}, parent_id=0)
+    doc.create_note({'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})
     doc.commit()

@@ -18,9 +18,8 @@ class WebTestCase(unittest.TestCase):
     def setUp(self):
         self.test_doc_path = mkdtemp()
         self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
-        self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
-        self.doc.create_note(1, {'desc': 'note 1'})
-        self.doc.create_note(2, {'desc': 'note 2'})
+        self.doc.create_note({'desc': 'note 1'})
+        self.doc.create_note({'desc': 'note 2'})
         self.app = server.NotespaceApp(self.doc)
         self.client = Client(self.app, BaseResponse)
 
@@ -75,7 +74,7 @@ class WebTestCase(unittest.TestCase):
         self.failIf(2 in self.doc.notes)
 
     def test_custom_html(self):
-        self.doc.create_note(3, {'a': 'b'}, cls=CustomTestNote)
+        self.doc.create_note({'a': 'b'}, cls=CustomTestNote)
         self.failUnlessJsonResponse(self.client.get('/notes/3'), {
             'props': {'a': 'b'},
             'children': [],
@@ -83,7 +82,7 @@ class WebTestCase(unittest.TestCase):
         })
 
     def test_ajax(self):
-        self.doc.create_note(3, {'html': 'hello html'}, cls=CustomTestNote)
+        self.doc.create_note({'html': 'hello html'}, cls=CustomTestNote)
         resp = self.client.post('/notes/3/ajax', data={'args': json.dumps({'token': 'asdf'})})
         self.failUnlessJsonResponse(resp, '-asdf-')
 

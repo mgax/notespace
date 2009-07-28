@@ -39,8 +39,8 @@ class NotespaceApp(object):
 
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
-            note_id = sorted(self.doc.list_note_ids())[-1] + 1
-            self.doc.create_note(note_id, json.loads(request.form['props']))
+            note = self.doc.create_note(json.loads(request.form['props']))
+            note_id = note.id
             self.doc.commit()
             return JsonResponse(note_id)
         else:

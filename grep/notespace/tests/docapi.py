@@ -19,9 +19,8 @@ class DocumentApiTestCase(unittest.TestCase):
     def setUp(self):
         self.test_doc_path = mkdtemp()
         self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
-        self.doc.create_note(0, {'desc': 'ROOT'}, [1, 2])
-        self.doc.create_note(1, {'desc': 'note 1'})
-        self.doc.create_note(2, {'desc': 'note 2'})
+        self.doc.create_note({'desc': 'note 1'})
+        self.doc.create_note({'desc': 'note 2'})
         self.doc.commit()
 
     def tearDown(self):
@@ -42,8 +41,16 @@ class DocumentApiTestCase(unittest.TestCase):
         self.failUnlessEqual(sorted(notes.keys()), [0, 1, 2])
         self.failUnlessEqual(notes[0]['desc'], 'ROOT')
 
+    def test_create_note(self):
+        note123 = self.doc.create_note(id=123)
+        self.failUnlessEqual(note123.id, 123)
+        self.failUnless(note123 is self.doc.get_note(123))
+        self.failUnless(123 in self.doc.get_note(0).children_ids())
+
+        self.failUnlessRaises(ValueError, lambda: self.doc.create_note(id=123))
+
     def test_remove_note(self):
-        self.doc.create_note(3, {'desc': 'note 3'})
+        self.doc.create_note({'desc': 'note 3'})
         self.doc.get_note(2)._children.append(3)
         self.failUnless(2 in self.doc.list_note_ids())
         self.failUnless(3 in self.doc.list_note_ids())
