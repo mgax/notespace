@@ -39,7 +39,6 @@ class WebTestCase(unittest.TestCase):
             'props': {'desc': 'ROOT'},
             'children': [1, 2],
         })
-        self.failUnlessJsonResponse(self.client.get('/notes/0/children'), [1, 2])
 
     def test_change_note(self):
         test_props = {'desc': 'new content here', 'a': 'b'}
@@ -49,22 +48,28 @@ class WebTestCase(unittest.TestCase):
         self.failUnlessJsonResponse(resp, {'props': test_props, 'children': []})
 
     def test_create_note(self):
-        resp = self.client.post('/notes', data={'props': json.dumps({'f': 'g'})})
+        resp = self.client.post('/notes', data={
+            'parent_id': 1, 'props': json.dumps({'f': 'g'})})
         self.failUnlessJsonResponse(resp, 3)
         self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(len(self.doc.notes), 4)
         self.failUnlessEqual(dict(self.doc.notes[3]), {'f': 'g'})
+        self.failUnlessEqual(list(self.doc.notes[1].children_ids()), [3])
+        self.failUnlessEqual(list(self.doc.notes[0].children_ids()), [1, 2])
 
-    def test_set_children(self):
-        resp = self.client.post('/notes/1/children', data={'children': json.dumps([2])})
-        self.failUnlessJsonResponse(resp, [2])
+    def test_set_parent(self):
+        resp = self.client.post('/notes/2/parent', data={'parent_id': 1})
+        self.failUnlessEqual(resp.status_code, 200)
         self.doc.abort() # checking if transaction was committed
         self.failUnlessEqual(list(self.doc.notes[1].children_ids()), [2])
         self.failUnlessEqual(list(self.doc.notes[0].children_ids()), [1])
 
     def test_remove_note(self):
-        self.client.post('/notes/1/children', data={'children': json.dumps([2]) })
+        self.client.post('/notes/2/parent', data={'parent_id': 1})
+
         self.failUnless(1 in self.doc.notes)
+        self.failUnless(1 in list(self.doc.notes[0].children_ids()))
+        self.failUnless(2 in self.doc.notes)
         self.failUnless(2 in list(self.doc.notes[1].children_ids()))
 
         resp = self.client.delete('/notes/1')

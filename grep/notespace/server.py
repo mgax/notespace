@@ -20,7 +20,7 @@ class NotespaceApp(object):
             Rule('/media/<filename>', endpoint=self.static),
             Rule('/notes', endpoint=self.notes_index),
             Rule('/notes/<note_id>', endpoint=self.note_page),
-            Rule('/notes/<note_id>/children', endpoint=self.note_children),
+            Rule('/notes/<note_id>/parent', endpoint=self.note_parent),
             Rule('/notes/<note_id>/ajax', endpoint=self.note_ajax),
         ])
 
@@ -39,7 +39,9 @@ class NotespaceApp(object):
 
     def notes_index(self, request, note_id=None):
         if request.method == 'POST':
-            note = self.doc.create_note(json.loads(request.form['props']))
+            parent_id = int(request.form['parent_id'])
+            note = self.doc.create_note(json.loads(request.form['props']),
+                parent_id=parent_id)
             note_id = note.id
             self.doc.commit()
             return JsonResponse(note_id)
@@ -75,16 +77,17 @@ class NotespaceApp(object):
             if note_id in note.children_ids():
                 note._children.remove(note_id)
 
-    def note_children(self, request, note_id):
+    def note_parent(self, request, note_id):
         note_id = int(note_id)
         if request.method == 'POST':
             # TODO: make sure we receive a list of valid note_ids
-            children = json.loads(request.form['children'])
-            for kid in children:
-                self.cleanup_child_links(kid)
-            self.doc.get_note(note_id)._children[:] = children # todo: test the [:] thing
+            parent_id = int(request.form['parent_id'])
+            if parent_id not in self.doc.notes:
+                raise NotImplementedError
+            self.cleanup_child_links(note_id)
+            self.doc.get_note(parent_id)._children.append(note_id)
             self.doc.commit()
-        return JsonResponse(list(self.doc.get_note(note_id).children_ids()))
+        return JsonResponse(list())
 
     def note_ajax(self, request, note_id):
         note_id = int(note_id)
