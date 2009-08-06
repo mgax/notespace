@@ -13,11 +13,11 @@ from durus.persistent_dict import PersistentDict
 from durus.btree import BTree
 
 class Note(Persistent):
-    def __init__(self, doc, id, props={}, children=[]):
+    def __init__(self, doc, id, props={}):
         self.document = doc
         self.id = id
         self._props = PersistentDict(props)
-        self._children = PersistentList(children)
+        self._children = PersistentList()
 
     def __setitem__(self, key, value):
         self._props[key] = value
@@ -63,7 +63,7 @@ class Document(Persistent):
         self.subscribers = PersistentList()
         self.notes[0] = Note(self, 0, {'desc': 'ROOT'})
 
-    def create_note(self, props={}, children=[], cls=Note, parent_id=0, id=None):
+    def create_note(self, props={}, cls=Note, parent_id=0, id=None):
         if id is None:
             if self.notes:
                 id = max(self.list_note_ids()) + 1
@@ -71,7 +71,7 @@ class Document(Persistent):
                 id = 0
         if id in self.notes:
             raise ValueError('Note id "%s" already in use' % id)
-        note = cls(self, id, props, children)
+        note = cls(self, id, props)
         self.notes[id] = note
         self.notes[parent_id]._children.append(note.id)
         return note
@@ -114,8 +114,8 @@ def open_document(db_path):
 
 def demo_data(doc):
     # TODO: clear the document
-    doc.create_note({'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300}, [2, 3])
-    doc.create_note({'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100}, parent_id=0)
-    doc.create_note({'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100}, parent_id=0)
+    doc.create_note({'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300})
+    doc.create_note({'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100}, parent_id=1)
+    doc.create_note({'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100}, parent_id=1)
     doc.create_note({'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})
     doc.commit()
