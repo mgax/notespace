@@ -15,10 +15,8 @@ cork_ui._new_note_model = function(parent_note_model, callback) {
 }
 cork_ui._get_note_model = function(note_id, callback) {
     $.getJSON('notes/' + note_id, function(data) {
-        $.getJSON('notes/' + note_id + '/children', function(children) {
-            if(callback) callback(make_note_model(note_id,
-                data['props'], data['html'], children));
-        });
+        if(callback) callback(make_note_model(note_id,
+            data['props'], data['html'], data['children']));
     });
 }
 
@@ -51,7 +49,7 @@ function make_note_model(id, props, html, children) {
             if(cork_ui.verbose_model)
                 console.log('note', id, 'appending child', child_id);
             children.push(child_id);
-            $.post('notes/' + id + '/children', {children: '[' + children + ']'},
+            $.post('/notes/' + child_id + '/parent', {parent_id: id},
                 function(data) { if(callback) callback(); }, 'json');
         },
         get_children: function() {
