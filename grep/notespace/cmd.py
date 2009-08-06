@@ -14,6 +14,10 @@ def bootstrap():
     parser.read(cfg_path)
     dbfile = parser.get('cork', 'dbfile')
 
+    raw_names = dict(parser.items('cork')).get('plugins', '').split('\n')
+    for plugin_name in filter(None, (name.strip() for name in raw_names)):
+        __import__(plugin_name)
+
     doc = open_document(dbfile)
 
     if len(args) > 1:

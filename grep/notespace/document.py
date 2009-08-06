@@ -1,6 +1,7 @@
 from os import path
 from cStringIO import StringIO
 import json
+from collections import MutableMapping
 import logging
 from logs import null_log
 null_log('durus')
@@ -12,7 +13,7 @@ from durus.persistent_list import PersistentList
 from durus.persistent_dict import PersistentDict
 from durus.btree import BTree
 
-class Note(Persistent):
+class Note(Persistent, MutableMapping):
     def __init__(self, doc, id, props={}):
         self.document = doc
         self.id = id
@@ -27,6 +28,9 @@ class Note(Persistent):
 
     def __getitem__(self, key):
         return self._props[key]
+
+    def __delitem__(self, key):
+        raise NotImplementedError
 
     def keys(self):
         return self._props.keys()
