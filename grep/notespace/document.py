@@ -13,7 +13,13 @@ from durus.persistent_list import PersistentList
 from durus.persistent_dict import PersistentDict
 from durus.btree import BTree
 
+from zope import interface
+
+from interfaces import INote
+
 class Note(Persistent, MutableMapping):
+    interface.implements(INote)
+
     def __init__(self, doc, id, props={}):
         self.document = doc
         self.id = id

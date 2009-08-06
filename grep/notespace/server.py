@@ -6,6 +6,9 @@ import json
 from werkzeug import Request, Response
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import NotFound
+from zope import component
+
+from interfaces import INote, INoteHtml
 
 templates_path = path.join(path.dirname(__file__), 'templates')
 web_media_path = path.join(path.dirname(__file__), 'web_media')
@@ -68,8 +71,9 @@ class NotespaceApp(object):
             'props': dict(note),
             'children': list(note.children_ids()),
         }
-        if hasattr(note, 'html'):
-            note_data['html'] = note.html
+        html = component.queryAdapter(note, INoteHtml)
+        if html is not None:
+            note_data['html'] = html
         return JsonResponse(note_data)
 
     def cleanup_child_links(self, note_id):
