@@ -6,11 +6,17 @@ import json
 from werkzeug import Client, BaseResponse
 from zope import component
 
-from grep.notespace.interfaces import INote, INoteHtml
+from grep.notespace.interfaces import INote, INoteView
 from grep.notespace import server
 from grep.notespace.document import open_document, Note
 
-class CustomTestNote(Note):
+class CustomView(object):
+    def __init__(self, note):
+        self.note = note
+
+    def html(self):
+        return '<em>hello custom!</em>'
+
     def ajax(self, request):
         args = json.loads(request.form.get('args'))
         return server.JsonResponse('-%s-' % str(args['token']))
@@ -80,24 +86,33 @@ class WebTestCase(unittest.TestCase):
         self.failIf(2 in self.doc.notes)
 
     def test_custom_html(self):
-        test_note_id = self.doc.create_note({'a': 'b'}).id
-
-        def customHtml(note):
+        gsm = component.getGlobalSiteManager()
+        def customViewAdapter(note):
             if note.id == test_note_id:
-                return '<em>hello custom!</em>'
-        component.provideAdapter(customHtml, adapts=[INote], provides=INoteHtml)
-        # TODO: don't forget to de-register this adapter
+                return CustomView(note)
+        gsm.registerAdapter(customViewAdapter, required=[INote], provided=INoteView)
 
+        test_note_id = self.doc.create_note({'a': 'b'}).id
         self.failUnlessJsonResponse(self.client.get('/notes/%d' % test_note_id), {
             'props': {'a': 'b'},
             'children': [],
             'html': '<em>hello custom!</em>',
         })
 
+        gsm.unregisterAdapter(customViewAdapter, required=[INote], provided=INoteView)
+
     def test_ajax(self):
-        self.doc.create_note({}, cls=CustomTestNote)
+        gsm = component.getGlobalSiteManager()
+        def customViewAdapter(note):
+            if note.id == test_note_id:
+                return CustomView(note)
+        gsm.registerAdapter(customViewAdapter, required=[INote], provided=INoteView)
+
+        test_note_id = self.doc.create_note({}).id
         resp = self.client.post('/notes/3/ajax', data={'args': json.dumps({'token': 'asdf'})})
         self.failUnlessJsonResponse(resp, '-asdf-')
+
+        gsm.unregisterAdapter(customViewAdapter, required=[INote], provided=INoteView)
 
 if __name__ == '__main__':
     unittest.main()

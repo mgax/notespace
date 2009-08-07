@@ -8,7 +8,7 @@ from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import NotFound
 from zope import component
 
-from interfaces import INote, INoteHtml
+from interfaces import INote, INoteView
 
 templates_path = path.join(path.dirname(__file__), 'templates')
 web_media_path = path.join(path.dirname(__file__), 'web_media')
@@ -71,9 +71,9 @@ class NotespaceApp(object):
             'props': dict(note),
             'children': list(note.children_ids()),
         }
-        html = component.queryAdapter(note, INoteHtml)
-        if html is not None:
-            note_data['html'] = html
+        view = component.queryAdapter(note, INoteView)
+        if view is not None:
+            note_data['html'] = view.html()
         return JsonResponse(note_data)
 
     def cleanup_child_links(self, note_id):
@@ -94,8 +94,11 @@ class NotespaceApp(object):
         return JsonResponse(list())
 
     def note_ajax(self, request, note_id):
-        note_id = int(note_id)
-        return self.doc.get_note(note_id).ajax(request)
+        note = self.doc.get_note(int(note_id))
+        view = component.queryAdapter(note, INoteView)
+        if view is None:
+            raise ValueError('could not find custom view for note %s' % note_id)
+        return view.ajax(request)
 
     @Request.application
     def __call__(self, request):
