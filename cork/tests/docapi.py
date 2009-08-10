@@ -4,7 +4,7 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from durus.persistent import Persistent
 
-from grep.notespace.document import open_document, Note
+from cork.document import open_document, Note
 
 class TestSubscriber(Persistent):
     def __init__(self):

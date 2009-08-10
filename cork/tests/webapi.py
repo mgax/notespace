@@ -6,9 +6,9 @@ import json
 from werkzeug import Client, BaseResponse
 from zope import component
 
-from grep.notespace.interfaces import INote, INoteView
-from grep.notespace import server
-from grep.notespace.document import open_document, Note
+from cork.interfaces import INote, INoteView
+from cork import server
+from cork.document import open_document, Note
 
 class CustomView(object):
     def __init__(self, note):
