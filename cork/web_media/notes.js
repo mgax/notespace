@@ -1,5 +1,14 @@
 (function(){
 
+cork_ui.setup_root_note = function(root_note_jq) {
+    cork_ui._get_note_model(0, function(root_note_model) {
+        var notes_container = $('ul#notes');
+        var root_note = make_basic_note(0, root_note_model, root_note_jq);
+        setup_droppable(root_note);
+        load_children(root_note);
+    });
+}
+
 cork_ui.load_note = function(note_id, jq, callback) {
     cork_ui._get_note_model(note_id, function(note_model) {
         var note = make_note(note_id, note_model, jq);
@@ -16,17 +25,24 @@ function create_new_note(parent_note_model, jq, callback) {
 
 cork_ui.notes = {}
 
-function make_note(note_id, note_model, jq) {
-    var note = {id: note_id, model: note_model};
-    setup_display(note, note.model.get_html(), jq);
+function make_basic_note(note_id, note_model, note_jq) {
+    var note = {id: note_id, model: note_model, jq: note_jq};
+    return note;
+}
+
+function make_note(note_id, note_model, note_jq) {
+    var note = make_basic_note(note_id, note_model, note_jq);
+    setup_display(note, note.model.get_html());
+    setup_droppable(note);
     setup_props(note);
     setup_children(note);
+    load_children(note);
     note.update_display();
     cork_ui.notes[note_id] = note;
     return note;
 }
 
-function setup_display(note, note_html, jq) {
+function setup_display(note, note_html) {
     note.update_display = function() {
         if($('ul.children.outline li.note').index(note.jq) == -1) {
             note.jq.css({
@@ -71,6 +87,36 @@ function setup_display(note, note_html, jq) {
         note.model.set_prop('left', parseInt(note.jq.css('left')));
         note.model.set_prop('top', parseInt(note.jq.css('top')));
     }
+    note.add_button = function(button_text, click_handler) {
+        var button = $('<a>' + button_text + '</a>').click(click_handler);
+        $('> div.buttons', note.jq).append(button);
+    }
+
+    note.jq.attr('id', note.id).attr('class', 'note');
+    note.jq.data('note', note);
+
+    note.jq.append($('<div class="buttons">'));
+    note.jq.append($('<div class="contents">'));
+    note.jq.append($('<ul class="children">'));
+
+    if(note.model.get_prop('css-outline'))
+        switch_to_outline();
+
+    note.add_button('[o]', on_click_outline);
+    note.add_button('[b]', on_click_box);
+
+    note.jq.bind('note_update_display', note.update_display);
+    note.jq.draggable();
+
+    if(note_html != null) {
+        note.jq.addClass('custom_html');
+        var html_container = $('<div class="custom_html_container">');
+        html_container.html(note_html);
+        note.jq.append(html_container);
+    }
+}
+
+function setup_droppable(note) {
     function can_drop(draggable) {
         if($('.toolbar *').index(draggable) > -1)
             return true;
@@ -113,37 +159,9 @@ function setup_display(note, note_html, jq) {
             }));
         }
     }
-    note.add_button = function(button_text, click_handler) {
-        var button = $('<a>' + button_text + '</a>').click(click_handler);
-        $('> div.buttons', note.jq).append(button);
-    }
-
-    note.jq = jq; // TODO: check that jq is [<li>]
-    note.jq.attr('id', note.id).attr('class', 'note');
-    note.jq.data('note', note);
-
-    note.jq.append($('<div class="buttons">'));
-    note.jq.append($('<div class="contents">'));
-    note.jq.append($('<ul class="children">'));
-
-    if(note.model.get_prop('css-outline'))
-        switch_to_outline();
-
-    note.add_button('[o]', on_click_outline);
-    note.add_button('[b]', on_click_box);
-
-    note.jq.bind('note_update_display', note.update_display);
-    note.jq.draggable();
     note.jq.droppable({greedy: true,
         hoverClass: 'drag_hover', activeClass: 'drag_active',
         accept: can_drop, drop: on_drag_drop});
-
-    if(note_html != null) {
-        note.jq.addClass('custom_html');
-        var html_container = $('<div class="custom_html_container">');
-        html_container.html(note_html);
-        note.jq.append(html_container);
-    }
 }
 
 function setup_props(note) {
@@ -227,8 +245,10 @@ function setup_children(note) {
         note.model.delete(function() { note.jq.remove(); });
     }
     note.add_button('[x]', on_click_delete);
+}
 
-    var children_container = $('> ul.children', note.jq)
+function load_children(note) {
+    var children_container = $('> ul.children', note.jq);
     $.each(note.model.get_children(), function(i, child_id) {
         var child_jq = $('<li>').appendTo(children_container);
         cork_ui.load_note(child_id, child_jq);

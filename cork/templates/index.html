@@ -16,26 +16,13 @@
 </head>
 <body>
 
-<ul id="notes" class="children"></ul>
-
-<!--
-<div class="toolbar">
-    <div class="button">Button</div>
+<div id="root_note">
+    <ul id="notes" class="children"></ul>
 </div>
--->
 
 </body>
 <script type="text/javascript"><!--
-
-cork_ui._get_note_model(0, function(root_note_model) {
-    var notes_container = $('ul#notes');
-    $.each(root_note_model.get_children(), function(i, note_id) {
-        var note_jq = $('<li>').appendTo(notes_container);
-        cork_ui.load_note(note_id, note_jq);
-    });
-});
-
-//$('.toolbar .button').draggable({helper: 'clone'});
-
+    cork_ui.setup_root_note($('div#root_note'));
 --></script>
+
 </html>
