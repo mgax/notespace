@@ -14,12 +14,15 @@ function create_new_note(parent_note_model, jq, callback) {
     });
 }
 
+cork_ui.notes = {}
+
 function make_note(note_id, note_model, jq) {
     var note = {id: note_id, model: note_model};
     setup_display(note, note.model.get_html(), jq);
     setup_props(note);
     setup_children(note);
     note.update_display();
+    cork_ui.notes[note_id] = note;
     return note;
 }
 
