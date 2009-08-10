@@ -4,7 +4,11 @@ cork_ui.verbose_model = false;
 
 cork_ui._new_note_model = function(parent_note_model, callback) {
     var props = {desc: 'kid'};
-    $.post('notes', {props: $.toJSON(props)}, function(note_id) {
+    var form_data = {
+        props: $.toJSON(props),
+        parent_id: parent_note_model.get_id()
+    };
+    $.post('notes', form_data, function(note_id) {
         var child_model = make_note_model(note_id, props, null, []);
         if(cork_ui.verbose_model)
             console.log('new note model', child_model.get_id());

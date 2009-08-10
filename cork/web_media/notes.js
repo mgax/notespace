@@ -237,6 +237,7 @@ function setup_props(note) {
 function setup_children(note) {
     function on_add_child() {
         if(note.block_click_hack) return;
+        var children_container = $('> ul.children', note.jq);
         var child_jq = $('<li>').appendTo(children_container);
         create_new_note(note.model, child_jq);
     }
