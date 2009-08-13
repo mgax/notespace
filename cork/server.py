@@ -20,7 +20,7 @@ class NotespaceApp(object):
         self.doc = doc
         self.url_map = Map([
             Rule('/', endpoint=self.index),
-            Rule('/media/<filename>', endpoint=self.static),
+            Rule('/media/<path:filename>', endpoint=self.static),
             Rule('/notes', endpoint=self.notes_index),
             Rule('/notes/<note_id>', endpoint=self.note_page),
             Rule('/notes/<note_id>/parent', endpoint=self.note_parent),

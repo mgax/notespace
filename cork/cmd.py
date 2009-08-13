@@ -1,7 +1,7 @@
 def bootstrap():
     import sys
     from os import path
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser, NoOptionError
     from document import open_document, demo_data
     from optparse import OptionParser
 
@@ -44,9 +44,16 @@ def bootstrap():
         app = NotespaceApp(doc)
         host = parser.get('testserver', 'host')
         port = parser.getint('testserver', 'port')
-        media_section = parser.get('testserver', 'staticmedia')
-        static_media = dict(parser.items(media_section))
-        app = SharedDataMiddleware(app, static_media)
+        try:
+            media_section = parser.get('testserver', 'staticmedia')
+        except NoOptionError:
+            static_media = None
+        else:
+            static_media = dict(parser.items(media_section))
+
+        if static_media is not None:
+            app = SharedDataMiddleware(app, static_media)
+
         run_simple(host, port, app, use_reloader=True, request_handler=handler)
         print # a blank line
 
