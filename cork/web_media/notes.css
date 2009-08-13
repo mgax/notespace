@@ -9,6 +9,7 @@ ul.children { list-style-type: none; }
 ul.children.outline { position: absolute; overflow-y: auto;
     top: 2em; bottom: .5em; right: .5em; left: .5em; }
 ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
+ul.children.outline ul.children.outline { position: static; }
 div.toolbar { background-color: #037; opacity: 0.5;
     float: right; width: 150px; height: 400px; padding: 1em; }
 div.button { background-color: #777; text-align: center;
