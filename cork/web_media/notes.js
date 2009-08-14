@@ -46,10 +46,10 @@ function setup_display(note, note_html) {
     note.update_display = function() {
         if($('ul.children.outline li.note').index(note.jq) == -1) {
             note.jq.css({
-                width: note.model.get_prop('width'),
-                height: note.model.get_prop('height'),
-                left: note.model.get_prop('left'),
-                top: note.model.get_prop('top')
+                width: note.model.get_prop('css-width'),
+                height: note.model.get_prop('css-height'),
+                left: note.model.get_prop('css-left'),
+                top: note.model.get_prop('css-top')
             });
             note.jq.resizable({stop: after_resize});
         }
@@ -75,8 +75,8 @@ function setup_display(note, note_html) {
         });
     }
     function after_resize() {
-        note.model.set_prop('width', parseInt(note.jq.css('width')));
-        note.model.set_prop('height', parseInt(note.jq.css('height')));
+        note.model.set_prop('css-width', parseInt(note.jq.css('width')));
+        note.model.set_prop('css-height', parseInt(note.jq.css('height')));
     }
     note.block_click_hack = false; // hack - dragging causes spurious click event
     note.do_block_click_hack = function() {
@@ -84,8 +84,8 @@ function setup_display(note, note_html) {
         note.block_click_hack = true;
     }
     note.after_drag = function() {
-        note.model.set_prop('left', parseInt(note.jq.css('left')));
-        note.model.set_prop('top', parseInt(note.jq.css('top')));
+        note.model.set_prop('css-left', parseInt(note.jq.css('left')));
+        note.model.set_prop('css-top', parseInt(note.jq.css('top')));
     }
     note.add_button = function(button_text, click_handler) {
         var button = $('<a>' + button_text + '</a>').click(click_handler);
@@ -146,8 +146,8 @@ function setup_droppable(note) {
                 }
                 $('> ul', note.jq).append(ui.draggable.css(position));
                 note.model.add_child(moving_note.model);
-                moving_note.model.set_prop('left', position.left);
-                moving_note.model.set_prop('top', position.top);
+                moving_note.model.set_prop('css-left', position.left);
+                moving_note.model.set_prop('css-top', position.top);
             }
         }
         else {

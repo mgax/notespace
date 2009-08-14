@@ -16,6 +16,7 @@ from durus.btree import BTree
 from zope import interface
 
 from interfaces import INote
+from updates import do_updates
 
 class Note(Persistent, MutableMapping):
     interface.implements(INote)
@@ -116,16 +117,22 @@ class Document(Persistent):
 
 def open_document(db_path):
     conn = Connection(FileStorage(db_path))
-    if 'doc' not in conn.get_root():
-        conn.get_root()['doc'] = Document()
+    db_root = conn.get_root()
+    if 'doc' not in db_root:
+        db_root['doc'] = Document()
         conn.commit()
+    do_updates(conn)
     h = DocumentHandler(conn)
     return h.doc
 
 def demo_data(doc):
     # TODO: clear the document
-    doc.create_note({'desc': 'note 1', 'left':100, 'top':100, 'width':500, 'height':300})
-    doc.create_note({'desc': 'note 2', 'left':10, 'top':80, 'width': 150, 'height': 100}, parent_id=1)
-    doc.create_note({'desc': 'note 3', 'left':240, 'top':100, 'width': 150, 'height': 100}, parent_id=1)
-    doc.create_note({'desc': 'note 4', 'left':150, 'top':450, 'width': 150, 'height': 100})
+    doc.create_note({'desc': 'note 1',
+        'css-left':100, 'css-top':100, 'css-width':500, 'css-height':300})
+    doc.create_note({'desc': 'note 2',
+        'css-left':10, 'css-top':80, 'css-width': 150, 'css-height': 100}, parent_id=1)
+    doc.create_note({'desc': 'note 3',
+        'css-left':240, 'css-top':100, 'css-width': 150, 'css-height': 100}, parent_id=1)
+    doc.create_note({'desc': 'note 4',
+        'css-left':150, 'css-top':450, 'css-width': 150, 'css-height': 100})
     doc.commit()
