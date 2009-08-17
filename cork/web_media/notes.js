@@ -106,7 +106,21 @@ function setup_display(note, note_html) {
     note.add_button('[b]', on_click_box);
 
     note.jq.bind('note_update_display', note.update_display);
+
+    note.jq.mousedown(function(evt) {
+        if(cork_ui.disable_note_drag) {
+            evt.stopImmediatePropagation();
+            cork_ui.start_lasso(evt);
+        }
+        else {
+            evt.stopPropagation();
+        }
+    });
     note.jq.draggable();
+    note.jq.click(function(evt) {
+        cork_ui.note_has_been_clicked(note);
+        evt.stopPropagation();
+    });
 
     if(note_html != null) {
         note.jq.addClass('custom_html');

@@ -18,6 +18,10 @@ ul.children.outline { position: absolute; overflow-y: auto;
 ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
 ul.children.outline ul.children.outline { position: static; }
 
+/* select */
+li.note.selected { outline: 2px solid #fd0; }
+div.lasso { outline: 1px dotted black; position: absolute; }
+
 /* property box */
 div.button { background-color: #777; text-align: center;
     display: inline-block; position: absolute; padding: .2em; }
