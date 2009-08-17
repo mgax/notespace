@@ -30,7 +30,7 @@ def bootstrap():
 
     elif cmd == 'serve':
         from werkzeug import run_simple, SharedDataMiddleware
-        from server import NotespaceApp
+        from server import CorkApp
 
         if options.quiet:
             from werkzeug.serving import BaseRequestHandler
@@ -41,7 +41,7 @@ def bootstrap():
         else:
             handler = None
 
-        app = NotespaceApp(doc)
+        app = CorkApp(doc)
         host = parser.get('testserver', 'host')
         port = parser.getint('testserver', 'port')
         try:

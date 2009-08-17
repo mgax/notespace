@@ -15,7 +15,7 @@ web_media_path = path.join(path.dirname(__file__), 'web_media')
 def JsonResponse(data):
     return Response(json.dumps(data), mimetype='application/json')
 
-class NotespaceApp(object):
+class CorkApp(object):
     def __init__(self, doc):
         self.doc = doc
         self.url_map = Map([

@@ -27,7 +27,7 @@ class WebTestCase(unittest.TestCase):
         self.doc = open_document(path.join(self.test_doc_path, 'test_doc.db'))
         self.doc.create_note({'desc': 'note 1'})
         self.doc.create_note({'desc': 'note 2'})
-        self.app = server.NotespaceApp(self.doc)
+        self.app = server.CorkApp(self.doc)
         self.client = Client(self.app, BaseResponse)
 
     def tearDown(self):
