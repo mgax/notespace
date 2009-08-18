@@ -10,8 +10,15 @@ cork_ui.report_exception = function(e) {
 }
 
 cork_ui.report_error = function(msg) {
-    console.log('cork_ui reporting error');
-    console.log(msg);
+    //console.log('cork_ui reporting error');
+    //console.log(msg);
+    cork_ui.add_to_ticker(msg, 'error');
+}
+
+cork_ui.report_info = function(msg) {
+    //console.log('cork_ui reporting info');
+    //console.log(msg);
+    cork_ui.add_to_ticker(msg, 'info');
 }
 
 cork_ui.callback_and_return_false = function(callable) {

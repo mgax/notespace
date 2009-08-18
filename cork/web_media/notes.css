@@ -32,3 +32,9 @@ dl.props dt { float: left; width: 7em; color: #555; }
 /* toolbar */
 div.toolbar { background-color: #037; opacity: 0.5;
     float: right; width: 150px; height: 400px; padding: 1em; }
+
+/* message ticker */
+ol#ticker { position: fixed; right: 0; bottom: 0; padding: 0; margin: 5pt;
+    list-style: none; text-align: right; }
+ol#ticker li.error { color: #977; }
+ol#ticker li.info { color: #797; }
