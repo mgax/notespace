@@ -32,6 +32,8 @@ cork_ui.note_has_been_clicked = function(note) {
             current_selection.push(note.jq[0]);
         }
     }
+
+    note_selection_changed();
 }
 
 cork_ui.start_lasso = function(evt) {
@@ -92,10 +94,18 @@ cork_ui.start_lasso = function(evt) {
     });
 }
 
+function note_selection_changed() {
+    var notes = current_selection.map(function() {
+        return $(this).data('note');
+    });
+    props_box.update_note_selection(notes);
+}
+
 var root_note_jq = this;
 root_note_jq.click(function() { cork_ui.note_has_been_clicked(null); });
 root_note_jq.mousedown(cork_ui.start_lasso);
 cork_ui.load_root_note(root_note_jq);
+var props_box = cork_ui.setup_props_box(root_note_jq);
 
 cork_ui.disable_note_drag = false;
 var shift_key = false;
