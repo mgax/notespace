@@ -8,19 +8,18 @@
     <script type="text/javascript" src="media/jq/jquery-ui-1.7.2.custom.min.js"></script>
     <script type="text/javascript" src="media/utils.js"></script>
     <script type="text/javascript" src="media/ticker.js"></script>
+    <script type="text/javascript" src="media/propbox.js"></script>
     <script type="text/javascript" src="media/shell.js"></script>
     <script type="text/javascript" src="media/note_model.js"></script>
     <script type="text/javascript" src="media/notes.js"></script>
 </head>
+
 <body>
-
-<div id="root_note">
-    <ul id="notes" class="children"></ul>
-</div>
-
+<div id="root_note"></div>
 </body>
+
 <script type="text/javascript"><!--
-    cork_ui.setup_root_note($('div#root_note'));
+    $('div#root_note').cork_shell('');
 --></script>
 
 </html>

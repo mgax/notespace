@@ -1,11 +1,8 @@
 (function(){
 
-cork_ui.setup_root_note = function(root_note_jq) {
-    cork_ui._get_note_model(0, function(root_note_model) {
-        var notes_container = $('ul#notes');
-        var root_note = make_basic_note(0, root_note_model, root_note_jq);
-        setup_droppable(root_note);
-        load_children(root_note);
+cork_ui.load_root_note = function(jq) {
+    cork_ui._get_note_model(0, function(note_model) {
+         make_root_note(0, note_model, jq);
     });
 }
 
@@ -27,6 +24,14 @@ cork_ui.notes = {}
 
 function make_basic_note(note_id, note_model, note_jq) {
     var note = {id: note_id, model: note_model, jq: note_jq};
+    return note;
+}
+
+function make_root_note(note_id, note_model, note_jq) {
+    var note = make_basic_note(note_id, note_model, note_jq);
+    $('<ul class="children">').appendTo(note_jq);
+    setup_droppable(note);
+    load_children(note);
     return note;
 }
 

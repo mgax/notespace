@@ -1,17 +1,4 @@
-(function(){
-
-$(document).keydown(on_keydown);
-$(document).keyup(on_keyup);
-var root_elem;
-$(function(){
-    root_elem = $('ul#notes');
-    root_elem.click(function() { cork_ui.note_has_been_clicked(null); });
-    root_elem.mousedown(cork_ui.start_lasso);
-});
-
-cork_ui.disable_note_drag = false;
-var shift_key = false;
-
+jQuery.fn.cork_shell = function(base_url) {
 function on_keydown(evt) {
     if(evt.shiftKey && evt.keyCode == 16) {
         shift_key = true;
@@ -62,7 +49,7 @@ cork_ui.start_lasso = function(evt) {
     }
 
     var ix = evt.pageX, iy = evt.pageY; /* initial X, Y */
-    var lasso_box = $('<div class="lasso">').appendTo(root_elem);
+    var lasso_box = $('<div class="lasso">').appendTo(root_note_jq);
     lasso_box.css({top: iy, left: ix});
 
     var move_handler = function(evt) {
@@ -98,11 +85,22 @@ cork_ui.start_lasso = function(evt) {
         });
     }
 
-    root_elem.bind('mousemove', move_handler);
-    root_elem.one('mouseup', function() {
-        root_elem.unbind('mousemove', move_handler);
+    root_note_jq.bind('mousemove', move_handler);
+    root_note_jq.one('mouseup', function() {
+        root_note_jq.unbind('mousemove', move_handler);
         lasso_box.remove();
     });
 }
 
-})();
+var root_note_jq = this;
+root_note_jq.click(function() { cork_ui.note_has_been_clicked(null); });
+root_note_jq.mousedown(cork_ui.start_lasso);
+cork_ui.load_root_note(root_note_jq);
+
+cork_ui.disable_note_drag = false;
+var shift_key = false;
+
+$(document).keydown(on_keydown);
+$(document).keyup(on_keyup);
+
+};

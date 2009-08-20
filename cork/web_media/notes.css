@@ -1,4 +1,5 @@
-html, body, div#root_note, ul#notes { width: 100%; height: 100%; margin: 0; padding: 0; }
+html, body, div#root_note, div#root_note > ul.children { width: 100%; height: 100%;
+    margin: 0; padding: 0; }
 body { background-color: #eed; font-family: Monaco; font-size: 10pt; }
 
 /* block view, common rules */
@@ -34,7 +35,6 @@ div.toolbar { background-color: #037; opacity: 0.5;
     float: right; width: 150px; height: 400px; padding: 1em; }
 
 /* message ticker */
-ol#ticker { position: fixed; right: 0; bottom: 0; padding: 0; margin: 5pt;
-    list-style: none; text-align: right; }
+ol#ticker { position: fixed; left: 0; bottom: 0; padding: 0; margin: 5pt; list-style: none; }
 ol#ticker li.error { color: #977; }
 ol#ticker li.info { color: #797; }
