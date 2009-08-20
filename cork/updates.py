@@ -23,3 +23,5 @@ def v2009_08_13(conn):
                 note['css-' + key] = note._props.pop(key)
     conn.get_root()['version'] = 'v2009_08_14'
     conn.commit()
+
+current_version = 'v2009_18_14'

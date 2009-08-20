@@ -16,7 +16,7 @@ from durus.btree import BTree
 from zope import interface
 
 from interfaces import INote
-from updates import do_updates
+import updates
 
 class Note(Persistent, MutableMapping):
     interface.implements(INote)
@@ -120,8 +120,9 @@ def open_document(db_path):
     db_root = conn.get_root()
     if 'doc' not in db_root:
         db_root['doc'] = Document()
+        db_root['version'] = updates.current_version
         conn.commit()
-    do_updates(conn)
+    updates.do_updates(conn)
     h = DocumentHandler(conn)
     return h.doc
 
