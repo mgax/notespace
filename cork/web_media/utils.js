@@ -66,4 +66,10 @@ $.fn.editable_field = function(on_save) {
     return this;
 }
 
+cork_ui.block_click_hack = false; // hack - block subsequent click events
+cork_ui.do_block_click_hack = function() {
+    setTimeout(function() { cork_ui.block_click_hack = false; }, 1);
+    cork_ui.block_click_hack = true;
+}
+
 })();

@@ -69,11 +69,11 @@ function setup_display(note, note_html) {
         $('.note', note.jq).trigger('note_update_display');
     }
     function on_click_outline() {
-        if(note.block_click_hack) return;
+        if(cork_ui.block_click_hack) return;
         note.model.set_prop('css-outline', true, switch_to_outline);
     }
     function on_click_box() {
-        if(note.block_click_hack) return;
+        if(cork_ui.block_click_hack) return;
         note.model.set_prop('css-outline', false, function() {
             $('> ul', note.jq).removeClass('outline');
             $('.note', note.jq).trigger('note_update_display');
@@ -82,11 +82,6 @@ function setup_display(note, note_html) {
     function after_resize() {
         note.model.set_prop('css-width', parseInt(note.jq.css('width')));
         note.model.set_prop('css-height', parseInt(note.jq.css('height')));
-    }
-    note.block_click_hack = false; // hack - dragging causes spurious click event
-    note.do_block_click_hack = function() {
-        setTimeout(function() { note.block_click_hack = false; }, 1);
-        note.block_click_hack = true;
     }
     note.after_drag = function() {
         note.model.set_prop('css-left', parseInt(note.jq.css('left')));
@@ -123,6 +118,7 @@ function setup_display(note, note_html) {
     });
     note.jq.draggable();
     note.jq.click(function(evt) {
+        if(cork_ui.block_click_hack) return;
         cork_ui.note_has_been_clicked(note);
         evt.stopPropagation();
     });
@@ -150,7 +146,7 @@ function setup_droppable(note) {
         if(ui.draggable.hasClass('note')) {
             // dropped a note
             var moving_note = ui.draggable.data('note');
-            moving_note.do_block_click_hack();
+            cork_ui.do_block_click_hack();
             if($('> ul > li.note', note.jq).index(ui.draggable[0]) > -1) {
                 // just repositioned note
                 moving_note.after_drag();
@@ -185,7 +181,7 @@ function setup_droppable(note) {
 
 function setup_props(note) {
     function edit_begin() {
-        if(note.block_click_hack) return;
+        if(cork_ui.block_click_hack) return;
         var input = $('<textarea>').append(view.contents());
         view.replaceWith(input);
         var done_button = $('<a>').append('done').click(function() {
@@ -255,7 +251,7 @@ function setup_props(note) {
 
 function setup_children(note) {
     function on_add_child() {
-        if(note.block_click_hack) return;
+        if(cork_ui.block_click_hack) return;
         var children_container = $('> ul.children', note.jq);
         var child_jq = $('<li>').appendTo(children_container);
         create_new_note(note.model, child_jq);
