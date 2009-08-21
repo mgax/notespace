@@ -36,13 +36,32 @@ function set_prop(name, new_value, callback) {
         // coerce `value` to int
         new_value = new_value - 0;
     }
-    note.model.set_prop(name, new_value, callback);
+
+    // we must save the value to each selected note, using
+    // callbacks. FUN!
+    var note_queue = current_selected_notes.slice(0); // copy the array
+    function save_chain() {
+        D = note_queue;
+        D2 = current_selected_notes;
+        var note = note_queue.pop();
+        if(note)
+            note.model.set_prop(name, new_value, save_chain);
+        else
+            callback();
+    }
+    save_chain();
 }
 
+var several = Object(); // marker for multiple values
 function add_prop_to_list(name, value) {
+    var initial_value = value;
+    if(value === several) {
+        initial_value = '';
+        value = '~~';
+    }
     var dd = $('<dd>').text(value).editable_field(function(new_value) {
         set_prop(name, new_value, function(){ dd.text(new_value); });
-    });
+    }, initial_value);
     props_jq.append($('<dt>').text(name), dd);
 }
 
@@ -55,12 +74,32 @@ function update_note_selection(selected_notes) {
         return;
     }
     if(selected_notes.length > 1) {
-        heading_jq.text('multiple selection');
-        return;
+        heading_jq.text('' + selected_notes.length + ' notes selected');
     }
-    var note_model = selected_notes[0].model;
-    heading_jq.text('editing ' + note_model.get_id());
-    $.each(note_model.get_all_props(), add_prop_to_list);
+    else {
+        heading_jq.text('editing ' + selected_notes[0].model.get_id());
+    }
+    var all_values = {};
+    $.each(selected_notes, function(i, note) {
+        var note_props = note.model.get_all_props();
+        $.each(note_props, function(name, value) {
+            if(name in all_values) {
+                if(value != all_values[name])
+                    all_values[name] = several; // because our value differs from previous
+            }
+            else {
+                if(i > 0)
+                    all_values[name] = several; // because previous notes did not have it
+                else
+                    all_values[name] = value;
+            }
+        });
+        $.each(all_values, function(name, value) {
+            if(! (name in note_props))
+                all_values[name] = several; // because this note doesn't have it
+        });
+    });
+    $.each(all_values, add_prop_to_list);
 }
 update_note_selection([]);
 

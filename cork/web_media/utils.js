@@ -33,7 +33,7 @@ cork_ui.callback_and_return_false = function(callable) {
     };
 }
 
-$.fn.editable_field = function(on_save) {
+$.fn.editable_field = function(on_save, initial_value) {
     $.each(this, function() {
         var view = $(this);
         view.click(show_edit);
@@ -48,7 +48,7 @@ $.fn.editable_field = function(on_save) {
         }
         function show_edit(evt) {
             evt.stopPropagation(); // to block handler in "shell"
-            var input = $('<input size="6">').attr('value', view.text())
+            var input = $('<input size="6">').attr('value', initial_value);
             input.keyup(function(evt) {
                 if(evt.keyCode == 27)
                     on_cancel();

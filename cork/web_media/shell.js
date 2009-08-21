@@ -103,8 +103,9 @@ cork_ui.start_lasso = function(evt) {
 }
 
 function note_selection_changed() {
-    var notes = current_selection.map(function() {
-        return $(this).data('note');
+    var notes = [];
+    current_selection.each(function() {
+        notes.push($(this).data('note'));
     });
     props_box.update_note_selection(notes);
 }
