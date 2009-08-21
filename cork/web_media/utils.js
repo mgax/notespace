@@ -46,16 +46,17 @@ $.fn.editable_field = function(on_save) {
         function on_cancel() {
             show_view();
         }
-        function show_edit() {
-            form = $('<form>').append(
-                $('<input size="6">')
-                    .attr('value', view.text())
-                    .keyup(function(e) {
-                        if(e.keyCode == 27) on_cancel();
-                    })
-                )
-                .submit(cork_ui.callback_and_return_false(on_submit));
+        function show_edit(evt) {
+            evt.stopPropagation(); // to block handler in "shell"
+            var input = $('<input size="6">').attr('value', view.text())
+            input.keyup(function(evt) {
+                if(evt.keyCode == 27)
+                    on_cancel();
+            })
+            form = $('<form>').append(input);
+            form.submit(cork_ui.callback_and_return_false(on_submit));
             view.hide().after(form);
+            input.trigger('focus');
         }
         function show_view() {
             if(form != null) { form.remove(); form = null; }

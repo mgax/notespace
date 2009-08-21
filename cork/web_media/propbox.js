@@ -6,16 +6,18 @@ jq.append('<div class="new_prop_dialog">'
   + '  <label>value <input name="value" /></label>'
   + '</div>');
 jq.append($('<div class="buttons">').append(
-    $('<a>[+]</a>').click(function() { dialog.dialog('open'); })
+    $('<a>[+]</a>').click(function() { dialog_jq.dialog('open'); })
 ));
+function event_blocker(evt) { evt.stopPropagation(); }
+jq.click(event_blocker).mousedown(event_blocker); // to block handlers in "shell"
 
-var dialog = $('div.new_prop_dialog', jq).dialog({
+var dialog_jq = $('div.new_prop_dialog', jq).dialog({
     autoOpen: false,
     modal: true,
     buttons: {
         create: function() {
-            var name = $('input[name=name]', dialog).val();
-            var value = $('input[name=value]', dialog).val();
+            var name = $('input[name=name]', dialog_jq).val();
+            var value = $('input[name=value]', dialog_jq).val();
             set_prop(name, value, function() { add_prop_to_list(name, value); });
             $(this).dialog('close');
         },
