@@ -26,9 +26,12 @@ div.lasso { outline: 1px dotted black; position: absolute; }
 /* property box */
 div.button { background-color: #777; text-align: center;
     display: inline-block; position: absolute; padding: .2em; }
-dl.props { position: fixed; top: 0; right: 0; margin: .2em; padding: .5em; width: 13em;
-    border: 1px solid green; background-color: #dd5; font-family: Monaco; font-size: 10pt; }
-dl.props dt { float: left; width: 7em; color: #555; }
+div.props_box { position: fixed; top: 0; right: 0;
+    border: 1px solid green; background-color: #dd5; }
+div.props_box h4 { margin: .5em; padding: 0; font-family: Georgia; }
+div.props_box dl { margin: .5em; padding: 0; width: 13em;
+    font-family: Monaco; font-size: 10pt; }
+div.props_box dl dt { float: left; width: 7em; color: #555; }
 
 /* toolbar */
 div.toolbar { background-color: #037; opacity: 0.5;
