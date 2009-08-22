@@ -90,7 +90,8 @@ class WebTestCase(unittest.TestCase):
         def customViewAdapter(note):
             if note.id == test_note_id:
                 return CustomView(note)
-        gsm.registerAdapter(customViewAdapter, required=[INote], provided=INoteView)
+        gsm.registerSubscriptionAdapter(customViewAdapter,
+            required=[INote], provided=INoteView)
 
         test_note_id = self.doc.create_note({'a': 'b'}).id
         self.failUnlessJsonResponse(self.client.get('/notes/%d' % test_note_id), {
@@ -99,20 +100,23 @@ class WebTestCase(unittest.TestCase):
             'html': '<em>hello custom!</em>',
         })
 
-        gsm.unregisterAdapter(customViewAdapter, required=[INote], provided=INoteView)
+        gsm.unregisterSubscriptionAdapter(customViewAdapter,
+            required=[INote], provided=INoteView)
 
     def test_ajax(self):
         gsm = component.getGlobalSiteManager()
         def customViewAdapter(note):
             if note.id == test_note_id:
                 return CustomView(note)
-        gsm.registerAdapter(customViewAdapter, required=[INote], provided=INoteView)
+        gsm.registerSubscriptionAdapter(customViewAdapter,
+            required=[INote], provided=INoteView)
 
         test_note_id = self.doc.create_note({}).id
         resp = self.client.post('/notes/3/ajax', data={'args': json.dumps({'token': 'asdf'})})
         self.failUnlessJsonResponse(resp, '-asdf-')
 
-        gsm.unregisterAdapter(customViewAdapter, required=[INote], provided=INoteView)
+        gsm.unregisterSubscriptionAdapter(customViewAdapter,
+            required=[INote], provided=INoteView)
 
 if __name__ == '__main__':
     unittest.main()

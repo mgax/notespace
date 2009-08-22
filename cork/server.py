@@ -71,7 +71,7 @@ class CorkApp(object):
             'props': dict(note),
             'children': list(note.children_ids()),
         }
-        view = component.queryAdapter(note, INoteView)
+        view = self._get_custom_view(note)
         if view is not None:
             note_data['html'] = view.html()
         return JsonResponse(note_data)
@@ -95,10 +95,16 @@ class CorkApp(object):
 
     def note_ajax(self, request, note_id):
         note = self.doc.get_note(int(note_id))
-        view = component.queryAdapter(note, INoteView)
+        view = self._get_custom_view(note)
         if view is None:
             raise ValueError('could not find custom view for note %s' % note_id)
         return view.ajax(request)
+
+    def _get_custom_view(self, note):
+        try:
+            return component.subscribers([note], INoteView).pop()
+        except IndexError:
+            return None
 
     @Request.application
     def __call__(self, request):
