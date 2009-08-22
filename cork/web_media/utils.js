@@ -10,8 +10,15 @@ cork_ui.report_exception = function(e) {
 }
 
 cork_ui.report_error = function(msg) {
-    console.log('cork_ui reporting error');
-    console.log(msg);
+    //console.log('cork_ui reporting error');
+    //console.log(msg);
+    cork_ui.add_to_ticker(msg, 'error');
+}
+
+cork_ui.report_info = function(msg) {
+    //console.log('cork_ui reporting info');
+    //console.log(msg);
+    cork_ui.add_to_ticker(msg, 'info');
 }
 
 cork_ui.callback_and_return_false = function(callable) {
@@ -26,7 +33,7 @@ cork_ui.callback_and_return_false = function(callable) {
     };
 }
 
-$.fn.editable_field = function(on_save) {
+$.fn.editable_field = function(on_save, initial_value) {
     $.each(this, function() {
         var view = $(this);
         view.click(show_edit);
@@ -39,16 +46,17 @@ $.fn.editable_field = function(on_save) {
         function on_cancel() {
             show_view();
         }
-        function show_edit() {
-            form = $('<form>').append(
-                $('<input size="6">')
-                    .attr('value', view.text())
-                    .keyup(function(e) {
-                        if(e.keyCode == 27) on_cancel();
-                    })
-                )
-                .submit(cork_ui.callback_and_return_false(on_submit));
+        function show_edit(evt) {
+            evt.stopPropagation(); // to block handler in "shell"
+            var input = $('<input size="6">').attr('value', initial_value);
+            input.keyup(function(evt) {
+                if(evt.keyCode == 27)
+                    on_cancel();
+            })
+            form = $('<form>').append(input);
+            form.submit(cork_ui.callback_and_return_false(on_submit));
             view.hide().after(form);
+            input.trigger('focus');
         }
         function show_view() {
             if(form != null) { form.remove(); form = null; }
@@ -56,6 +64,12 @@ $.fn.editable_field = function(on_save) {
         }
     });
     return this;
+}
+
+cork_ui.block_click_hack = false; // hack - block subsequent click events
+cork_ui.do_block_click_hack = function() {
+    setTimeout(function() { cork_ui.block_click_hack = false; }, 1);
+    cork_ui.block_click_hack = true;
 }
 
 })();
