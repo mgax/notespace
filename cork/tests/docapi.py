@@ -89,5 +89,11 @@ class DocumentApiTestCase(unittest.TestCase):
             child_ids.append(child.id)
         self.failUnlessEqual(child_ids, [1, 2])
 
+    def test_dump_notes(self):
+        ref_data = ('{"0": {"children": [1, 2], "props": {"desc": "ROOT"}}, '
+            '"1": {"children": [], "props": {"desc": "note 1"}}, '
+            '"2": {"children": [], "props": {"desc": "note 2"}}}')
+        self.assertEqual(self.doc.dump_notes(), ref_data)
+
 if __name__ == '__main__':
     unittest.main()
