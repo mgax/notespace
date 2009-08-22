@@ -199,50 +199,6 @@ function setup_props(note) {
             view.text(value).click(edit_begin);
         });
     }
-    function show_props() {
-        var dl = $('<dl class="props">');
-        note.jq.append(dl);
-        dl.append('<div class="new_prop_dialog">'
-          + '  <label>name <input name="name" /></label><br />'
-          + '  <label>value <input name="value" /></label>'
-          + '</div>');
-        dl.append($('<div class="buttons">').append(
-            $('<a>[x]</a>').click(function() { dl.remove(); }),
-            $('<a>[+]</a>').click(function() { dialog.dialog('open'); })
-        ));
-        var note_props = note.model.get_all_props();
-        $.each(note_props, function(key) { add_prop_to_list(key, note_props[key]); });
-
-        var dialog = $('div.new_prop_dialog', note.jq).dialog({
-            autoOpen: false,
-            modal: true,
-            buttons: {
-                create: function() {
-                    var name = $('input[name=name]', dialog).val();
-                    var value = $('input[name=value]', dialog).val();
-                    set_prop(name, value, function() { add_prop_to_list(name, value); });
-                    $(this).dialog('close');
-                },
-                cancel: function() { $(this).dialog('close'); }
-            }
-        });
-
-        function add_prop_to_list(name, value) {
-            var dd = $('<dd>').text(value).editable_field(function(new_value) {
-                set_prop(name, new_value, function(){ dd.text(new_value); });
-            });
-            dl.append($('<dt>').text(name), dd);
-        }
-
-        function set_prop(name, new_value, callback) {
-            if(typeof(note.model.get_prop(name)) == "number") {
-                // coerce `value` to int
-                new_value = new_value - 0;
-            }
-            note.model.set_prop(name, new_value, callback);
-        }
-    }
-    note.add_button('[e]', show_props);
 
     var view = $('<p>').append(note.model.get_prop('desc'));
     view.click(edit_begin);
