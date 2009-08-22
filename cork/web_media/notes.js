@@ -213,10 +213,6 @@ function setup_children(note) {
         create_new_note(note.model, child_jq);
     }
     note.add_button('[+]', on_add_child);
-    function on_click_delete() {
-        note.model.delete(function() { note.jq.remove(); });
-    }
-    note.add_button('[x]', on_click_delete);
 }
 
 function load_children(note) {
