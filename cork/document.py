@@ -110,6 +110,16 @@ class Document(Persistent):
             if note_id in note._children:
                 note._children.remove(note_id)
 
+    def dump_notes(self):
+        def generate():
+            for note in self.list_notes():
+                note_data = {
+                    'props': dict(note._props),
+                    'children': list(note._children),
+                }
+                yield note.id, note_data
+        return json.dumps(dict(generate()))
+
     # TODO: deprecate these methods
     def abort(self): self.handler.abort()
     def commit(self): self.handler.commit()

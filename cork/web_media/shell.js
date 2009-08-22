@@ -1,8 +1,17 @@
 jQuery.fn.cork_shell = function(base_url) {
+
+var _html_elem = $('html')[0];
 function on_keydown(evt) {
     if(evt.shiftKey && evt.keyCode == 16) {
         shift_key = true;
         cork_ui.disable_note_drag = true;
+    }
+    var _target_is_root = (evt.originalTarget == _html_elem);
+    if(evt.keyCode == 46 && _target_is_root) { // keyCode 46 - delete
+        current_selection.each(function(i, note_dom) {
+            var note = $(note_dom).data('note');
+            note.model.delete(function() { note.jq.remove(); });
+        });
     }
 }
 
