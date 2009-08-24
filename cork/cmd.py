@@ -44,18 +44,15 @@ def bootstrap():
         app = CorkApp(doc)
         host = parser.get('testserver', 'host')
         port = parser.getint('testserver', 'port')
-        try:
-            media_section = parser.get('testserver', 'staticmedia')
-        except NoOptionError:
-            static_media = None
-        else:
-            static_media = dict(parser.items(media_section))
-
-        if static_media is not None:
-            app = SharedDataMiddleware(app, static_media)
 
         run_simple(host, port, app, use_reloader=True, request_handler=handler)
         print # a blank line
+
+    elif cmd == 'launchd':
+        from wsginetd import serve
+        from server import CorkApp
+        sys.stderr = open('var/launchd.log', 'a')
+        serve(CorkApp(doc))
 
     elif cmd == 'interact':
         import code
