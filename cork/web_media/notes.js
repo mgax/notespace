@@ -180,28 +180,7 @@ function setup_droppable(note) {
 }
 
 function setup_props(note) {
-    function edit_begin() {
-        if(cork_ui.block_click_hack) return;
-        var input = $('<textarea>').append(view.contents());
-        view.replaceWith(input);
-        var done_button = $('<a>').append('done').click(function() {
-            done_button.remove();
-            edit_done();
-        });
-        input.after(done_button);
-    }
-    function edit_done() {
-        var input = $('textarea', note.jq);
-        var value = input.val();
-        input.replaceWith(view);
-        view.text('-- saving --');
-        note.model.set_prop('desc', value, function() {
-            view.text(value).click(edit_begin);
-        });
-    }
-
     var view = $('<p>').append(note.model.get_prop('desc'));
-    view.click(edit_begin);
     $('> div.contents', note.jq).append(view);
 }
 
