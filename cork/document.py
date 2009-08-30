@@ -139,11 +139,13 @@ def open_document(db_path):
 def demo_data(doc):
     # TODO: clear the document
     doc.create_note({'desc': 'note 1',
-        'css-left':100, 'css-top':100, 'css-width':500, 'css-height':300})
+        'css-left':'100px', 'css-top':'100px', 'css-width':'500px', 'css-height':'300px'})
     doc.create_note({'desc': 'note 2',
-        'css-left':10, 'css-top':80, 'css-width': 150, 'css-height': 100}, parent_id=1)
+        'css-left':'10px', 'css-top':'80px', 'css-width': '150px', 'css-height': '100px'},
+        parent_id=1)
     doc.create_note({'desc': 'note 3',
-        'css-left':240, 'css-top':100, 'css-width': 150, 'css-height': 100}, parent_id=1)
+        'css-left':'240px', 'css-top':'100px', 'css-width': '150px', 'css-height': '100px'},
+        parent_id=1)
     doc.create_note({'desc': 'note 4',
-        'css-left':150, 'css-top':450, 'css-width': 150, 'css-height': 100})
+        'css-left':'150px', 'css-top':'450px', 'css-width': '150px', 'css-height': '100px'})
     doc.commit()

@@ -14,6 +14,8 @@ def do_updates(conn):
         conn.abort() # to make sure updates do their own commits
         if version == get_version():
             raise ValueError('the update script "%s" forgot to change db version')
+        else:
+            print "Updated to version", version
 
 @update_from
 def v2009_08_13(conn):
@@ -24,4 +26,18 @@ def v2009_08_13(conn):
     conn.get_root()['version'] = 'v2009_08_14'
     conn.commit()
 
-current_version = 'v2009_18_14'
+@update_from
+def v2009_08_14(conn):
+    for note in conn.get_root()['doc'].list_notes():
+        for key in note.keys():
+            value = note[key]
+            if not isinstance(value, unicode):
+                note[key] = unicode(value)
+            if key in ('css-top', 'css-left', 'css-width', 'css-height'):
+                print key, note[key]
+                if not note[key].endswith('px'):
+                    note[key] += 'px'
+    conn.get_root()['version'] = 'v2009_08_30'
+    conn.commit()
+
+current_version = 'v2009_18_30'

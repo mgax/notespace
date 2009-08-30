@@ -31,12 +31,6 @@ var dialog_jq = $('div.new_prop_dialog', box_jq).dialog({
 });
 
 function set_prop(name, new_value, callback) {
-    var note = current_selected_notes[0];
-    if(typeof(note.model.get_prop(name)) == "number") {
-        // coerce `value` to int
-        new_value = new_value - 0;
-    }
-
     // we must save the value to each selected note, using
     // callbacks. FUN!
     var note_queue = current_selected_notes.slice(0); // copy the array

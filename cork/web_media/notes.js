@@ -80,12 +80,12 @@ function setup_display(note, note_html) {
         });
     }
     function after_resize() {
-        note.model.set_prop('css-width', parseInt(note.jq.css('width')));
-        note.model.set_prop('css-height', parseInt(note.jq.css('height')));
+        note.model.set_prop('css-width', note.jq.css('width'));
+        note.model.set_prop('css-height', note.jq.css('height'));
     }
     note.after_drag = function() {
-        note.model.set_prop('css-left', parseInt(note.jq.css('left')));
-        note.model.set_prop('css-top', parseInt(note.jq.css('top')));
+        note.model.set_prop('css-left', note.jq.css('left'));
+        note.model.set_prop('css-top', note.jq.css('top'));
     }
     note.add_button = function(button_text, click_handler) {
         var button = $('<a>' + button_text + '</a>').click(click_handler);
@@ -161,8 +161,8 @@ function setup_droppable(note) {
                 }
                 $('> ul', note.jq).append(ui.draggable.css(position));
                 note.model.add_child(moving_note.model);
-                moving_note.model.set_prop('css-left', position.left);
-                moving_note.model.set_prop('css-top', position.top);
+                moving_note.model.set_prop('css-left', position.left + 'px');
+                moving_note.model.set_prop('css-top', position.top + 'px');
             }
         }
         else {
