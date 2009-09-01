@@ -34,6 +34,7 @@ div.props_box h4 { margin: .5em; padding: 0; font-family: Georgia; }
 div.props_box dl { margin: .5em; padding: 0; width: 13em;
     font-family: Monaco; font-size: 10pt; }
 div.props_box dl dt { float: left; width: 7em; color: #555; }
+div.props_box dd.remove { margin: 0; float: right; color: #c66; }
 
 /* toolbar */
 div.toolbar { background-color: #037; opacity: 0.5;

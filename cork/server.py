@@ -61,7 +61,10 @@ class CorkApp(object):
         if request.method == 'POST':
             props = note._props
             props.clear()
-            props.update(json.loads(request.form['props']))
+            for key, value in json.loads(request.form['props']).iteritems():
+                if value is None:
+                    continue
+                props[key] = value
             self.doc.commit()
         if request.method == 'DELETE':
             self.doc.del_note(note_id)

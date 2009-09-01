@@ -72,6 +72,9 @@ class DocumentApiTestCase(unittest.TestCase):
         self.failUnlessEqual(n['x'], 13)
         self.failUnlessEqual(n['x'], 13)
         self.failUnlessEqual(dict(n), {'x': 13, 'desc': 'note 1'})
+        # setting value to None removes it
+        n['x'] = None
+        self.failUnlessEqual(dict(n), {'desc': 'note 1'})
 
     def test_prop_change_notify(self):
         subscriber = TestSubscriber()

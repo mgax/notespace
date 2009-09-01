@@ -28,7 +28,11 @@ class Note(Persistent, MutableMapping):
         self._children = PersistentList()
 
     def __setitem__(self, key, value):
-        self._props[key] = value
+        print key, value
+        if value is None:
+            del self._props[key]
+        else:
+            self._props[key] = value
         for subscriber in self.document.subscribers:
             if hasattr(subscriber, 'prop_change'):
                 subscriber.prop_change(self, key, value)

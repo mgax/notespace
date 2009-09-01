@@ -53,10 +53,16 @@ function add_prop_to_list(name, value) {
         initial_value = '';
         value = '~~';
     }
+    var dt = $('<dt>').text(name);
     var dd = $('<dd>').text(value).editable_field(function(new_value) {
         set_prop(name, new_value, function(){ dd.text(new_value); });
     }, initial_value);
-    props_jq.append($('<dt>').text(name), dd);
+    var del = $('<dd class="remove">').append('&#x2718;');
+    del.click(function(evt) {
+        set_prop(name, null, function() { entry.remove(); });
+    });
+    var entry = $(dt).add(del).add(dd).appendTo(props_jq);
+    console.log(entry, dt, dd, del);
 }
 
 var current_selected_notes;
