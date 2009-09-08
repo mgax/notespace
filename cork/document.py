@@ -28,7 +28,6 @@ class Note(Persistent, MutableMapping):
         self._children = PersistentList()
 
     def __setitem__(self, key, value):
-        print key, value
         if value is None:
             del self._props[key]
         else:

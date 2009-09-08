@@ -34,7 +34,6 @@ def v2009_08_14(conn):
             if not isinstance(value, unicode):
                 note[key] = unicode(value)
             if key in ('css-top', 'css-left', 'css-width', 'css-height'):
-                print key, note[key]
                 if not note[key].endswith('px'):
                     note[key] += 'px'
     conn.get_root()['version'] = 'v2009_08_30'
