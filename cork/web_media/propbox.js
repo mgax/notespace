@@ -62,7 +62,6 @@ function add_prop_to_list(name, value) {
         set_prop(name, null, function() { entry.remove(); });
     });
     var entry = $(dt).add(del).add(dd).appendTo(props_jq);
-    console.log(entry, dt, dd, del);
 }
 
 var current_selected_notes;
