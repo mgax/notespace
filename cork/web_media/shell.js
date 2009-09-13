@@ -1,28 +1,64 @@
 jQuery.fn.cork_shell = function(base_url) {
 
-var _html_elem = $('html')[0];
-function on_keydown(evt) {
-    if(evt.shiftKey && evt.keyCode == 16) {
-        shift_key = true;
-        cork_ui.disable_note_drag = true;
-    }
-    var _target_is_root = (evt.originalTarget == _html_elem);
-    if(evt.keyCode == 46 && _target_is_root) { // keyCode 46 - delete
-        current_selection.each(function(i, note_dom) {
-            var note = $(note_dom).data('note');
-            note.model.delete(function() { note.jq.remove(); });
-        });
-    }
+function key_j(evt) {
+    //console.log('j');
+    cork_ui.set_selection(current_selection.next());
 }
 
-function on_keyup(evt) {
-    if(evt.keyCode == 16) {
-        shift_key = false;
-        cork_ui.disable_note_drag = false;
-    }
+function key_k(evt) {
+    //console.log('k');
+    cork_ui.set_selection(current_selection.prev());
+}
+
+function key_h(evt) {
+    //console.log('h');
+}
+
+function key_l(evt) {
+    //console.log('l');
+}
+
+function key_del(evt) {
+    current_selection.each(function(i, note_dom) {
+        var note = $(note_dom).data('note');
+        note.model.delete(function() { note.jq.remove(); });
+    });
+}
+
+var keyBindings_by_charcode = {
+    '104': key_h,
+    '106': key_j,
+    '107': key_k,
+    '108': key_l
+};
+var keyBindings_by_keycode = {
+    '46': key_del,
+};
+
+var _html_elem = $('html')[0];
+
+function on_keypress(evt) {
+    if(evt.originalTarget != _html_elem)
+        return;
+
+    var handler;
+    if(evt.charCode != 0)
+        handler = keyBindings_by_charcode[evt.charCode.toString()];
+    if(evt.keyCode != 0)
+        handler = keyBindings_by_keycode[evt.keyCode.toString()];
+
+    if(handler)
+        handler(evt);
 }
 
 var current_selection = $([]);
+
+cork_ui.set_selection = function(note_list) {
+    current_selection.removeClass('selected');
+    current_selection = $(note_list);
+    current_selection.addClass('selected');
+    note_selection_changed();
+}
 
 cork_ui.note_has_been_clicked = function(note) {
     if(shift_key == false) {
@@ -131,7 +167,13 @@ var props_box = cork_ui.setup_props_box(root_note_jq);
 cork_ui.disable_note_drag = false;
 var shift_key = false;
 
-$(document).keydown(on_keydown);
-$(document).keyup(on_keyup);
+function update_shift_key(evt) {
+    if(evt.charCode != 0 || evt.keyCode != 16)
+        return;
+    shift_key = cork_ui.disable_note_drag = evt.shiftKey;
+}
+
+$(document).keydown(update_shift_key).keyup(update_shift_key);
+$(document).keypress(on_keypress);
 
 };
