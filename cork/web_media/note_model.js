@@ -28,6 +28,7 @@ function make_note_model(id, props, html, children) {
     var dummy_node = $('<div>');
     return {
         set_prop: function(key, value, callback) {
+            if(props[key] == value) return;
             if(cork_ui.verbose_model)
                 cork_ui.report_info('note '+id+' setting property '+key+' to '+value);
             props[key] = value;
