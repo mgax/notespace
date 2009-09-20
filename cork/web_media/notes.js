@@ -123,6 +123,13 @@ function setup_display(note, note_html) {
         evt.stopPropagation();
     });
 
+    note.model.propchange_bind(function(evt) {
+        $.each(['width', 'height', 'top', 'left'], function(i, name) {
+            if(evt.name == 'css-'+name)
+                note.jq.css(name, evt.value);
+        });
+    });
+
     if(note_html != null) {
         note.jq.addClass('custom_html');
         var html_container = $('<div class="custom_html_container">');
@@ -180,8 +187,13 @@ function setup_droppable(note) {
 }
 
 function setup_props(note) {
-    var view = $('<p>').append(note.model.get_prop('desc'));
+    var view = $('<p>').text(note.model.get_prop('desc'));
     $('> div.contents', note.jq).append(view);
+    note.model.propchange_bind(function(evt) {
+        if(evt.name == 'desc')
+            view.text(evt.value);
+    });
+
 }
 
 function setup_children(note) {

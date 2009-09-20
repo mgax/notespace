@@ -25,13 +25,16 @@ cork_ui._get_note_model = function(note_id, callback) {
 }
 
 function make_note_model(id, props, html, children) {
+    var dummy_node = $('<div>');
     return {
         set_prop: function(key, value, callback) {
             if(cork_ui.verbose_model)
                 cork_ui.report_info('note '+id+' setting property '+key+' to '+value);
             props[key] = value;
-            $.post('notes/' + id, {props: $.toJSON(props)},
-                function(data) { if(callback) callback(); });
+            $.post('notes/' + id, {props: $.toJSON(props)}, function(data) {
+                dummy_node.trigger({type: 'propchange', name: key, value: value});
+                if(callback) callback();
+            });
         },
         // TODO: set_props method
         get_prop: function(key) {
@@ -64,6 +67,12 @@ function make_note_model(id, props, html, children) {
                 cork_ui.report_info('deleting note '+id);
             $.ajax({type: 'DELETE', url: 'notes/' + id, dataType: "json",
                 success: function(data) { if(callback) callback(); }});
+        },
+        propchange_bind: function(callback) {
+            dummy_node.bind('propchange', callback);
+        },
+        propchange_unbind: function(callback) {
+            dummy_node.unbind('propchange', callback);
         }
     };
 }
