@@ -6,9 +6,7 @@ body { background-color: #eed; font-family: Monaco; font-size: 10pt; }
 li.note { background-color: #ac8; border: 1px solid #887;
     position: absolute; overflow: hidden; padding: .2em; cursor: crosshair; }
 li.note > div.contents > p { margin: 0; }
-li.note.drag_active { border-color: #fff; }
 li.note.drag_hover { border-color: #f66; }
-li.note.ui-draggable-dragging { z-index: 1; }
 ul.children { list-style-type: none; }
 div.buttons { float: right; color: #887 }
 li.note.custom_html > * { display: none; }

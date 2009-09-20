@@ -7,18 +7,21 @@ cork_ui.setup_note_dom = function(note) {
 }
 
 function setup_display(note) {
+    note.should_display_as_outline = function() {
+        return $('ul.children.outline li.note#'+note.id).length > 0;
+    }
     note.jq.bind('note_update_display', function(evt) {
         evt.stopPropagation();
-        if($('ul.children.outline li.note#'+note.id).index(note.jq) == -1) {
+        if(note.should_display_as_outline()) {
+            note.jq.css({width: null, height: null, left: null, top: null});
+        }
+        else {
             note.jq.css({
                 width: note.model.get_prop('css-width'),
                 height: note.model.get_prop('css-height'),
                 left: note.model.get_prop('css-left'),
                 top: note.model.get_prop('css-top')
             });
-        }
-        else {
-            note.jq.css({width: null, height: null, left: null, top: null});
         }
     });
     note.jq.triggerHandler('note_update_display');
@@ -103,14 +106,17 @@ function setup_drag_drop(note) {
 
             if(parent_jq.index(drag_target) == -1) {
                 var new_parent = drag_target_jq.data('note');
-                new_parent.model.add_child(note.model, function() {
-                    $('> ul', new_parent.jq).append(note.jq);
-                });
+                new_parent.model.add_child(note.model);
+                $('> ul', new_parent.jq).append(note.jq);
             }
 
             var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
-            note.model.set_prop('css-top', new_offset.top);
-            note.model.set_prop('css-left', new_offset.left);
+            console.log(new_offset);
+            if(! note.should_display_as_outline()) {
+                note.model.set_prop('css-top', new_offset.top);
+                note.model.set_prop('css-left', new_offset.left);
+            }
+            note.jq.triggerHandler('note_update_display');
             drag_target_jq.removeClass('drag_hover');
             drag_target = null;
         }
@@ -138,8 +144,8 @@ function calculate_offset_px(parent_jq, child_jq) {
     var parent_offset = parent_jq.offset();
     var child_offset = child_jq.offset();
     return {
-        top: (child_offset.top - parent_offset.top) + 'px',
-        left: (child_offset.left - parent_offset.left) + 'px'
+        top: Math.round(child_offset.top - parent_offset.top) + 'px',
+        left: Math.round(child_offset.left - parent_offset.left) + 'px'
     };
 }
 
@@ -155,6 +161,8 @@ function next_resize(resize_next) {
         if(resize_next == null)
             return;
         var note = resize_next;
+        if(note.should_display_as_outline())
+            return;
         note.jq.resizable({
             stop: function(evt, ui) {
                 note._do_prevent_click();
