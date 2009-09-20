@@ -30,7 +30,6 @@ function make_basic_note(note_id, note_model, note_jq) {
 function make_root_note(note_id, note_model, note_jq) {
     var note = make_basic_note(note_id, note_model, note_jq);
     $('<ul class="children">').appendTo(note_jq);
-    setup_droppable(note);
     load_children(note);
     return note;
 }
@@ -38,7 +37,6 @@ function make_root_note(note_id, note_model, note_jq) {
 function make_note(note_id, note_model, note_jq) {
     var note = make_basic_note(note_id, note_model, note_jq);
     setup_display(note, note.model.get_html());
-    setup_droppable(note);
     setup_props(note);
     setup_children(note);
     load_children(note);
@@ -56,36 +54,15 @@ function setup_display(note, note_html) {
                 left: note.model.get_prop('css-left'),
                 top: note.model.get_prop('css-top')
             });
-            note.jq.resizable({stop: after_resize});
         }
         else {
             note.jq.removeAttr('style');
-            note.jq.resizable('destroy');
         }
         return false;
     }
     function switch_to_outline() {
         $('> ul', note.jq).addClass('outline');
         $('.note', note.jq).trigger('note_update_display');
-    }
-    function on_click_outline() {
-        if(cork_ui.block_click_hack) return;
-        note.model.set_prop('css-outline', true, switch_to_outline);
-    }
-    function on_click_box() {
-        if(cork_ui.block_click_hack) return;
-        note.model.set_prop('css-outline', false, function() {
-            $('> ul', note.jq).removeClass('outline');
-            $('.note', note.jq).trigger('note_update_display');
-        });
-    }
-    function after_resize() {
-        note.model.set_prop('css-width', note.jq.css('width'));
-        note.model.set_prop('css-height', note.jq.css('height'));
-    }
-    note.after_drag = function() {
-        note.model.set_prop('css-left', note.jq.css('left'));
-        note.model.set_prop('css-top', note.jq.css('top'));
     }
     note.add_button = function(button_text, click_handler) {
         var button = $('<a>' + button_text + '</a>').click(click_handler);
@@ -102,23 +79,21 @@ function setup_display(note, note_html) {
     if(note.model.get_prop('css-outline'))
         switch_to_outline();
 
-    note.add_button('[o]', on_click_outline);
-    note.add_button('[b]', on_click_box);
+    note.add_button('[o]', function(evt) {
+        evt.stopPropagation();
+        note.model.set_prop('css-outline', true, switch_to_outline);
+    });
+    note.add_button('[b]', function(evt) {
+        evt.stopPropagation();
+        note.model.set_prop('css-outline', false, function() {
+            $('> ul', note.jq).removeClass('outline');
+            $('.note', note.jq).trigger('note_update_display');
+        });
+    });
 
     note.jq.bind('note_update_display', note.update_display);
 
-    note.jq.mousedown(function(evt) {
-        if(cork_ui.disable_note_drag) {
-            evt.stopImmediatePropagation();
-            cork_ui.start_lasso(evt);
-        }
-        else {
-            evt.stopPropagation();
-        }
-    });
-    note.jq.draggable();
     note.jq.click(function(evt) {
-        if(cork_ui.block_click_hack) return;
         cork_ui.note_has_been_clicked(note);
         evt.stopPropagation();
     });
@@ -138,54 +113,6 @@ function setup_display(note, note_html) {
     }
 }
 
-function setup_droppable(note) {
-    function can_drop(draggable) {
-        if($('.toolbar *').index(draggable) > -1)
-            return true;
-        if($(draggable).hasClass('note')) {
-            if($('.note', draggable).index(note.jq) > -1)
-                return false;
-            return true;
-        }
-        return false;
-    }
-    function on_drag_drop(e, ui) {
-        if(ui.draggable.hasClass('note')) {
-            // dropped a note
-            var moving_note = ui.draggable.data('note');
-            cork_ui.do_block_click_hack();
-            if($('> ul > li.note', note.jq).index(ui.draggable[0]) > -1) {
-                // just repositioned note
-                moving_note.after_drag();
-            }
-            else {
-                // changing parent of note
-                var parent_offset = ui.draggable.parent().closest('li.note').offset();
-                var here_offset = note.jq.offset();
-                var position = {
-                    top: ui.position.top - here_offset.top + parent_offset.top,
-                    left: ui.position.left - here_offset.left + parent_offset.left
-                }
-                $('> ul', note.jq).append(ui.draggable.css(position));
-                note.model.add_child(moving_note.model);
-                moving_note.model.set_prop('css-left', position.left + 'px');
-                moving_note.model.set_prop('css-top', position.top + 'px');
-            }
-        }
-        else {
-            // dropped a button
-            var note_offset = note.jq.offset();
-            note.jq.append($(ui.draggable).clone().css({
-                left: ui.offset.left - note_offset.left,
-                top: ui.offset.top - note_offset.top
-            }));
-        }
-    }
-    note.jq.droppable({greedy: true,
-        hoverClass: 'drag_hover', activeClass: 'drag_active',
-        accept: can_drop, drop: on_drag_drop});
-}
-
 function setup_props(note) {
     var view = $('<p>').text(note.model.get_prop('desc'));
     $('> div.contents', note.jq).append(view);
@@ -198,7 +125,6 @@ function setup_props(note) {
 
 function setup_children(note) {
     function on_add_child() {
-        if(cork_ui.block_click_hack) return;
         var children_container = $('> ul.children', note.jq);
         var child_jq = $('<li>').appendTo(children_container);
         create_new_note(note.model, child_jq);
