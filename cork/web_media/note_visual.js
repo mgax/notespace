@@ -1,8 +1,14 @@
 (function(){
 
 cork_ui.setup_note_dom = function(note) {
-    note.update_display = function() {
-        if($('ul.children.outline li.note').index(note.jq) == -1) {
+    setup_display(note);
+    setup_drag_drop(note);
+}
+
+function setup_display(note) {
+    note.jq.bind('note_update_display', function(evt) {
+        evt.stopPropagation();
+        if($('ul.children.outline li.note#'+note.id).index(note.jq) == -1) {
             note.jq.css({
                 width: note.model.get_prop('css-width'),
                 height: note.model.get_prop('css-height'),
@@ -11,10 +17,10 @@ cork_ui.setup_note_dom = function(note) {
             });
         }
         else {
-            note.jq.removeAttr('style');
+            note.jq.css({width: null, height: null, left: null, top: null});
         }
-        return false;
-    }
+    });
+    note.jq.triggerHandler('note_update_display');
     function switch_to_outline() {
         $('> ul', note.jq).addClass('outline');
         $('.note', note.jq).trigger('note_update_display');
@@ -23,8 +29,6 @@ cork_ui.setup_note_dom = function(note) {
         var button = $('<a>' + button_text + '</a>').click(click_handler);
         $('> div.buttons', note.jq).append(button);
     }
-
-    note.jq.attr('id', note.id).attr('class', 'note');
 
     note.jq.append($('<div class="buttons">'));
     note.jq.append($('<div class="contents">'));
@@ -45,10 +49,8 @@ cork_ui.setup_note_dom = function(note) {
         });
     });
 
-    note.jq.bind('note_update_display', note.update_display);
-
     var _prevent_click = false;
-    function _do_prevent_click() {
+    note._do_prevent_click = function() {
         _prevent_click = true;
         setTimeout(function() {_prevent_click = false;}, 0);
     }
@@ -77,7 +79,9 @@ cork_ui.setup_note_dom = function(note) {
         html_container.html(note_html);
         note.jq.append(html_container);
     }
+}
 
+function setup_drag_drop(note) {
     var drag_target = null;
     note.jq.draggable({
         helper: function(evt) {
@@ -92,7 +96,7 @@ cork_ui.setup_note_dom = function(note) {
             $([drag_target]).addClass('drag_hover');
         },
         stop: function(evt, ui) {
-            _do_prevent_click();
+            note._do_prevent_click();
             parent_jq = note.jq.parent().closest('.note');
             var drag_target_jq = $([drag_target]);
 

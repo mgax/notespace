@@ -90,7 +90,6 @@ function note_selection_changed() {
 }
 
 var root_note_jq = this;
-root_note_jq.addClass('note');
 root_note_jq.click(function(evt) {
     cork_ui.note_has_been_clicked(null);
 });

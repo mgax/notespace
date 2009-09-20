@@ -24,7 +24,8 @@ cork_ui.notes = {}
 
 function make_basic_note(note_id, note_model, note_jq) {
     var note = {id: note_id, model: note_model, jq: note_jq};
-    note_jq.data('note', note);
+    note_jq.addClass('note').data('note', note);
+    cork_ui.notes[note_id] = note;
     return note;
 }
 
@@ -37,11 +38,10 @@ function make_root_note(note_id, note_model, note_jq) {
 
 function make_note(note_id, note_model, note_jq) {
     var note = make_basic_note(note_id, note_model, note_jq);
+    note_jq.attr('id', note_id);
     cork_ui.setup_note_dom(note);
     setup_children(note);
     load_children(note);
-    note.update_display();
-    cork_ui.notes[note_id] = note;
     return note;
 }
 
