@@ -25,7 +25,6 @@ cork_ui.setup_note_dom = function(note) {
     }
 
     note.jq.attr('id', note.id).attr('class', 'note');
-    note.jq.data('note', note);
 
     note.jq.append($('<div class="buttons">'));
     note.jq.append($('<div class="contents">'));
@@ -48,7 +47,13 @@ cork_ui.setup_note_dom = function(note) {
 
     note.jq.bind('note_update_display', note.update_display);
 
+    var _prevent_click = false;
+    function _do_prevent_click() {
+        _prevent_click = true;
+        setTimeout(function() {_prevent_click = false;}, 0);
+    }
     note.jq.click(function(evt) {
+        if(_prevent_click) return;
         cork_ui.note_has_been_clicked(note);
         evt.stopPropagation();
     });
@@ -72,6 +77,65 @@ cork_ui.setup_note_dom = function(note) {
         html_container.html(note_html);
         note.jq.append(html_container);
     }
+
+    var drag_target = null;
+    note.jq.draggable({
+        helper: function(evt) {
+            return note.jq.clone().appendTo($('body')).removeAttr('id').css('opacity', 0.7);
+        },
+        drag: function(evt, ui) {
+            var t = get_current_hover_target(evt, ui, note.jq);
+            if(drag_target === t) return;
+            //console.log(t);
+            $([drag_target]).removeClass('drag_hover');
+            drag_target = t;
+            $([drag_target]).addClass('drag_hover');
+        },
+        stop: function(evt, ui) {
+            _do_prevent_click();
+            parent_jq = note.jq.parent().closest('.note');
+            var drag_target_jq = $([drag_target]);
+
+            if(parent_jq.index(drag_target) == -1) {
+                var new_parent = drag_target_jq.data('note');
+                new_parent.model.add_child(note.model, function() {
+                    $('> ul', new_parent.jq).append(note.jq);
+                });
+            }
+
+            var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
+            note.model.set_prop('css-top', new_offset.top);
+            note.model.set_prop('css-left', new_offset.left);
+            drag_target_jq.removeClass('drag_hover');
+            drag_target = null;
+        }
+    });
+}
+
+function get_current_hover_target(evt, ui, note_jq) {
+    var candidates = [];
+    $('.note').each(function() {
+        if(this === ui.helper[0]) return;
+        if(this === note_jq[0]) return;
+        var offset = $(this).offset();
+        var t = offset.top;
+        var l = offset.left;
+        var b = t + $(this).height();
+        var r = l + $(this).width();
+        if(t > evt.pageY || b < evt.pageY) return;
+        if(l > evt.pageX || r < evt.pageX) return;
+        candidates.push(this);
+    });
+    return candidates.pop();
+}
+
+function calculate_offset_px(parent_jq, child_jq) {
+    var parent_offset = parent_jq.offset();
+    var child_offset = child_jq.offset();
+    return {
+        top: (child_offset.top - parent_offset.top) + 'px',
+        left: (child_offset.left - parent_offset.left) + 'px'
+    };
 }
 
 })();

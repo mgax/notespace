@@ -24,6 +24,7 @@ cork_ui.notes = {}
 
 function make_basic_note(note_id, note_model, note_jq) {
     var note = {id: note_id, model: note_model, jq: note_jq};
+    note_jq.data('note', note);
     return note;
 }
 
