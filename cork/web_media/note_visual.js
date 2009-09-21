@@ -88,13 +88,9 @@ function setup_display(note) {
 function setup_drag_drop(note) {
     var drag_target = null;
     note.jq.draggable({
-        helper: function(evt) {
-            return note.jq.clone().appendTo($('body')).removeAttr('id').css('opacity', 0.7);
-        },
         drag: function(evt, ui) {
             var t = get_current_hover_target(evt, ui, note.jq);
             if(drag_target === t) return;
-            //console.log(t);
             $([drag_target]).removeClass('drag_hover');
             drag_target = t;
             $([drag_target]).addClass('drag_hover');
@@ -111,7 +107,6 @@ function setup_drag_drop(note) {
             }
 
             var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
-            console.log(new_offset);
             if(! note.should_display_as_outline()) {
                 note.model.set_prop('css-top', new_offset.top);
                 note.model.set_prop('css-left', new_offset.left);

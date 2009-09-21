@@ -21,7 +21,7 @@ function key_l(evt) {
 function key_del(evt) {
     current_selection.each(function(i, note_dom) {
         var note = $(note_dom).data('note');
-        note.model.delete(function() { note.jq.remove(); });
+        note.model.remove(function() { note.jq.remove(); });
     });
 }
 

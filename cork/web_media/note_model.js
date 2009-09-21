@@ -63,7 +63,7 @@ function make_note_model(id, props, html, children) {
         get_children: function() {
             return children;
         },
-        delete: function(callback) {
+        remove: function(callback) {
             if(cork_ui.verbose_model)
                 cork_ui.report_info('deleting note '+id);
             $.ajax({type: 'DELETE', url: 'notes/' + id, dataType: "json",
