@@ -14,7 +14,7 @@ li.note.custom_html > div.custom_html_container { display: block; }
 
 /* outline view */
 ul.children.outline li.note { overflow: visible; padding: 0; position: relative; }
-ul.children.outline { position: absolute; overflow-y: auto;
+ul.children.outline { position: absolute; padding-left: 1.5em; overflow-y: auto;
     top: 2em; bottom: .5em; right: .5em; left: .5em; }
 ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
 ul.children.outline ul.children.outline { position: static; }

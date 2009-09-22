@@ -20,7 +20,7 @@ function setup_display(note) {
                 width: note.model.get_prop('css-width'),
                 height: note.model.get_prop('css-height'),
                 left: note.model.get_prop('css-left'),
-                top: note.model.get_prop('css-top')
+                top: note.model.get_prop('css-top'),
             });
         }
     });
@@ -38,6 +38,7 @@ function setup_display(note) {
     note.jq.append($('<div class="contents">'));
     note.jq.append($('<ul class="children">'));
 
+    note.jq.css('background-color', note.model.get_prop('css-background-color'));
     if(note.model.get_prop('css-outline'))
         switch_to_outline();
 
@@ -68,7 +69,7 @@ function setup_display(note) {
     $('> div.contents', note.jq).append(view);
 
     note.model.propchange_bind(function(evt) {
-        $.each(['width', 'height', 'top', 'left'], function(i, name) {
+        $.each(['width', 'height', 'top', 'left', 'background-color'], function(i, name) {
             if(evt.name == 'css-'+name)
                 note.jq.css(name, evt.value);
         });
