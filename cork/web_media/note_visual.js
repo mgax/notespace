@@ -89,6 +89,10 @@ function setup_display(note) {
 function setup_drag_drop(note) {
     var drag_target = null;
     note.jq.draggable({
+        helper: function(evt) {
+            setTimeout(function(){ note.jq.hide(); }, 0);
+            return note.jq.clone().removeAttr('id').appendTo($('body'));
+        },
         drag: function(evt, ui) {
             var t = get_current_hover_target(evt, ui, note.jq);
             if(drag_target === t) return;
@@ -106,6 +110,8 @@ function setup_drag_drop(note) {
                 new_parent.model.add_child(note.model);
                 $('> ul', new_parent.jq).append(note.jq);
             }
+
+            note.jq.show();
 
             var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
             if(! note.should_display_as_outline()) {
