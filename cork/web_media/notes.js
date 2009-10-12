@@ -46,12 +46,12 @@ function make_note(note_id, note_model, note_jq) {
 }
 
 function setup_children(note) {
-    function on_add_child() {
+    note.append_child = function(evt, callback) {
         var children_container = $('> ul.children', note.jq);
         var child_jq = $('<li>').appendTo(children_container);
-        create_new_note(note.model, child_jq);
+        create_new_note(note.model, child_jq, callback);
     }
-    note.add_button('[+]', on_add_child);
+    note.add_button('[+]', note.append_child);
 }
 
 function load_children(note) {

@@ -1,21 +1,7 @@
 jQuery.fn.cork_shell = function(base_url) {
 
-function key_j(evt) {
-    //console.log('j');
-    cork_ui.set_selection(current_selection.next());
-}
-
-function key_k(evt) {
-    //console.log('k');
-    cork_ui.set_selection(current_selection.prev());
-}
-
-function key_h(evt) {
-    //console.log('h');
-}
-
-function key_l(evt) {
-    //console.log('l');
+function key_esc(evt) {
+    cork_ui.set_selection([]);
 }
 
 function key_del(evt) {
@@ -25,8 +11,43 @@ function key_del(evt) {
     });
 }
 
+function key_A(evt) {
+    if(current_selection.length) {
+        var note = current_selection.data('note');
+        note.append_child(evt, function(new_note_jq) {
+            cork_ui.set_selection(new_note_jq);
+        });
+    }
+}
+
+function key_j(evt) {
+    var next = current_selection.next('.note');
+    if(next.length)
+        cork_ui.set_selection(next);
+}
+
+function key_k(evt) {
+    var prev = current_selection.prev('.note');
+    if(prev.length)
+        cork_ui.set_selection(prev);
+}
+
+function key_h(evt) {
+    var parent = current_selection.parent().closest('.note');
+    if(parent.length)
+        cork_ui.set_selection(parent);
+}
+
+function key_l(evt) {
+    var firstchild = $('.note', current_selection).slice(0,1);
+    if(firstchild.length)
+        cork_ui.set_selection(firstchild)
+}
+
 var keyBindings_by_keycode = {
+    '27': key_esc,
     '46': key_del,
+    '65': key_A,
     '72': key_h,
     '74': key_j,
     '75': key_k,
@@ -43,6 +64,8 @@ function on_keydown(evt) {
     var handler = keyBindings_by_keycode[evt.keyCode.toString()];
     if(handler)
         handler(evt);
+//    else
+//        console.log(evt.keyCode);
 }
 
 var current_selection = $([]);
