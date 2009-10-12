@@ -25,28 +25,22 @@ function key_del(evt) {
     });
 }
 
-var keyBindings_by_charcode = {
-    '104': key_h,
-    '106': key_j,
-    '107': key_k,
-    '108': key_l
-};
 var keyBindings_by_keycode = {
     '46': key_del,
+    '72': key_h,
+    '74': key_j,
+    '75': key_k,
+    '76': key_l
 };
 
 var _html_elem = $('html')[0];
+var _html_body_elem = $('body')[0];
 
-function on_keypress(evt) {
-    if(evt.originalTarget != _html_elem)
+function on_keydown(evt) {
+    if(evt.target != _html_elem && evt.target != _html_body_elem)
         return;
 
-    var handler;
-    if(evt.charCode != 0)
-        handler = keyBindings_by_charcode[evt.charCode.toString()];
-    if(evt.keyCode != 0)
-        handler = keyBindings_by_keycode[evt.keyCode.toString()];
-
+    var handler = keyBindings_by_keycode[evt.keyCode.toString()];
     if(handler)
         handler(evt);
 }
@@ -105,6 +99,6 @@ function update_shift_key(evt) {
 }
 
 $(document).keydown(update_shift_key).keyup(update_shift_key);
-$(document).keypress(on_keypress);
+$(document).keydown(on_keydown);
 
 };
