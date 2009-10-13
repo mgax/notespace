@@ -73,6 +73,10 @@ def bootstrap():
         doc = open_document(dbfile)
         code.interact(local={'doc': doc, '__name__': '__console__', '__doc__': None})
 
+    elif cmd == 'packdb':
+        doc = open_document(dbfile)
+        doc._p_connection.pack()
+
     else:
         print>>sys.stderr, "Unknown command \"%s\"" % cmd
 
