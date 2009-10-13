@@ -67,6 +67,10 @@ function setup_display(note) {
 
     var view = $('<p>').text(note.model.get_prop('desc'));
     $('> div.contents', note.jq).append(view);
+    note.edit_in_place = function() {
+        function on_change(new_value) { note.model.set_prop('desc', new_value); }
+        view.instant_input(note.model.get_prop('desc'), on_change);
+    };
 
     note.model.propchange_bind(function(evt) {
         $.each(['width', 'height', 'top', 'left', 'background-color'], function(i, name) {

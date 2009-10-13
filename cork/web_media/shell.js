@@ -20,6 +20,12 @@ function key_A(evt) {
     }
 }
 
+function key_e(evt) {
+    evt.preventDefault();
+    if(current_selection.length)
+        current_selection.data('note').edit_in_place();
+}
+
 function key_j(evt) {
     var next = current_selection.next('.note');
     if(next.length)
@@ -48,6 +54,7 @@ var keyBindings_by_keycode = {
     '27': key_esc,
     '46': key_del,
     '65': key_A,
+    '69': key_e,
     '72': key_h,
     '74': key_j,
     '75': key_k,

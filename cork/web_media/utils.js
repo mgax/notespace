@@ -33,37 +33,29 @@ cork_ui.callback_and_return_false = function(callable) {
     };
 }
 
-$.fn.editable_field = function(on_save, initial_value) {
-    $.each(this, function() {
-        var view = $(this);
-        view.click(show_edit);
-        var form = null;
+$.fn.instant_input = function(initial_value, on_change, on_cancel) {
+    var original_element = this;
+    var input = $('<input>').attr('value', initial_value);
+    var edit = $('<form>').append(input);
 
-        function on_submit() {
-            on_save($('input', form).val());
-            show_view();
-        }
-        function on_cancel() {
-            show_view();
-        }
-        function show_edit(evt) {
-            evt.stopPropagation(); // to block handler in "shell"
-            var input = $('<input size="6">').attr('value', initial_value);
-            input.keyup(function(evt) {
-                if(evt.keyCode == 27)
-                    on_cancel();
-            })
-            form = $('<form>').append(input);
-            form.submit(cork_ui.callback_and_return_false(on_submit));
-            view.hide().after(form);
-            input.trigger('focus');
-        }
-        function show_view() {
-            if(form != null) { form.remove(); form = null; }
-            view.show();
-        }
+    input.keyup(function(evt) {
+        if(evt.keyCode != 27) return;
+        restore_original_element();
+        if(on_cancel) on_cancel();
     });
-    return this;
+    edit.submit(function(evt) {
+        evt.preventDefault();
+        var value = input.val();
+        restore_original_element();
+        if(on_change) on_change(value);
+    });
+    function restore_original_element() {
+        edit.remove()
+        original_element.show();
+    }
+
+    original_element.after(edit).hide();
+    input.trigger('focus');
 }
 
 })();
