@@ -2,7 +2,6 @@
 
 cork_ui.setup_note_dom = function(note) {
     setup_display(note);
-    setup_drag_drop(note);
     setup_resize(note);
 }
 
@@ -14,6 +13,7 @@ function setup_display(note) {
         evt.stopPropagation();
         if(note.should_display_as_outline()) {
             note.jq.css({width: null, height: null, left: null, top: null});
+            setup_drag_drop(note, false);
         }
         else {
             note.jq.css({
@@ -22,11 +22,12 @@ function setup_display(note) {
                 left: note.model.get_prop('css-left'),
                 top: note.model.get_prop('css-top'),
             });
+            setup_drag_drop(note, true);
         }
     });
     note.jq.triggerHandler('note_update_display');
     function switch_to_outline() {
-        $('> ul', note.jq).addClass('outline');
+        $('> ul.children', note.jq).addClass('outline');
         $('.note', note.jq).trigger('note_update_display');
     }
     note.add_button = function(button_text, click_handler) {
@@ -90,48 +91,65 @@ function setup_display(note) {
     }
 }
 
-function setup_drag_drop(note) {
+function setup_drag_drop(note, draggable) {
+    if(draggable) {
+        note.jq.draggable({
+            drag: on_drag,
+            start: on_start,
+            stop: on_stop,
+            helper: 'clone',
+            appendTo: 'body',
+        });
+    }
+    else {
+        note.jq.draggable('destroy');
+    }
+
     var drag_target = null;
-    note.jq.draggable({
-        helper: function(evt) {
-            setTimeout(function(){ note.jq.hide(); }, 0);
-            return note.jq.clone().removeAttr('id').appendTo($('body'));
-        },
-        drag: function(evt, ui) {
-            var t = get_current_hover_target(evt, ui, note.jq);
-            if(drag_target === t) return;
-            $([drag_target]).removeClass('drag_hover');
-            drag_target = t;
-            $([drag_target]).addClass('drag_hover');
-        },
-        stop: function(evt, ui) {
-            note._do_prevent_click();
-            parent_jq = note.jq.parent().closest('.note');
-            var drag_target_jq = $([drag_target]);
+    function on_start(evt, ui) {
+        note.jq.css('visibility', 'hidden');
+    }
+    function on_drag(evt, ui) {
+        var t = get_current_hover_target(evt, ui, note.jq);
+        if(drag_target === t) return;
+        $([drag_target]).removeClass('drag_hover');
+        drag_target = t;
+        $([drag_target]).addClass('drag_hover');
+    }
+    function on_stop(evt, ui) {
+        note._do_prevent_click();
+        parent_jq = note.jq.parent().closest('.note');
+        var drag_target_jq = $([drag_target]);
 
-            if(parent_jq.index(drag_target) == -1) {
-                var new_parent = drag_target_jq.data('note');
-                new_parent.model.add_child(note.model);
-                $('> ul', new_parent.jq).append(note.jq);
-            }
-
-            note.jq.show();
-
-            var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
-            if(! note.should_display_as_outline()) {
-                note.model.set_prop('css-top', new_offset.top);
-                note.model.set_prop('css-left', new_offset.left);
-            }
-            note.jq.triggerHandler('note_update_display');
-            drag_target_jq.removeClass('drag_hover');
-            drag_target = null;
+        if(parent_jq.index(drag_target) == -1) {
+            var new_parent = drag_target_jq.data('note');
+            new_parent.model.add_child(note.model);
+            $('> ul', new_parent.jq).append(note.jq);
         }
-    });
+
+        note.jq.css('visibility', '');
+
+        var new_offset = calculate_offset_px(drag_target_jq, ui.helper);
+        if(! note.should_display_as_outline()) {
+            note.model.set_prop('css-top', new_offset.top);
+            note.model.set_prop('css-left', new_offset.left);
+        }
+        else {
+            note.jq.css({top: '', left: ''});
+        }
+        note.jq.triggerHandler('note_update_display');
+        drag_target_jq.removeClass('drag_hover');
+        drag_target = null;
+    }
 }
 
 function get_current_hover_target(evt, ui, note_jq) {
     var candidates = [];
+    var children_notejq = $('.note', note_jq);
+    var children_helper = $('.note', ui.helper);
     $('.note').each(function() {
+        if(children_helper.index(this) > -1) return;
+        if(children_notejq.index(this) > -1) return;
         if(this === ui.helper[0]) return;
         if(this === note_jq[0]) return;
         var offset = $(this).offset();
