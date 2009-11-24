@@ -34,9 +34,18 @@ function setup_display(note) {
         $('> div.buttons', note.jq).append(button);
     }
 
-    note.jq.append($('<div class="buttons">'));
-    note.jq.append($('<div class="contents">'));
-    note.jq.append($('<ul class="children">'));
+    var note_html = note.model.get_prop('-html-');
+    var view = null;
+    if(note_html != null) {
+        note.jq.html(note_html);
+    }
+    else {
+        var note_text = note.model.get_prop('desc')
+        view = $('<p class="contents">').text(note_text);
+        note.jq.append($('<div class="buttons">'));
+        note.jq.append(view);
+        note.jq.append($('<ul class="children">'));
+    }
 
     note.jq.css('background-color', note.model.get_prop('css-background-color'));
     if(note.model.get_prop('css-outline'))
@@ -65,9 +74,8 @@ function setup_display(note) {
         evt.stopPropagation();
     });
 
-    var view = $('<p>').text(note.model.get_prop('desc'));
-    $('> div.contents', note.jq).append(view);
     note.edit_in_place = function() {
+        if(view == null) return;
         function on_change(new_value) { note.model.set_prop('desc', new_value); }
         view.instant_input(note.model.get_prop('desc'), on_change);
     };

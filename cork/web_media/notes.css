@@ -1,18 +1,20 @@
 html, body, div#root_note, div#root_note > ul.children { width: 100%; height: 100%;
     margin: 0; padding: 0; }
-body { background-color: #eed; font-family: Menlo; font-size: 9pt; }
+body { background-color: #ac8; font-family: Menlo; font-size: 9pt; }
 
 /* block view, common rules */
-li.note { background-color: #ac8; border: 1px solid #887;
+div#root_note, li.note, ul.children { background-color: inherit; }
+li.note { border: 1px solid #887; -webkit-box-shadow: #333 1px 1px 3px;
     position: absolute; overflow: hidden; padding: .2em; cursor: crosshair; }
-li.note > div.contents > p { margin: 0; }
+li.note > p.contents { margin: 0; }
 ul.children { list-style-type: none; }
 div.buttons { float: right; color: #887 }
 li.note.custom_html > * { display: none; }
 li.note.custom_html > div.custom_html_container { display: block; }
 
 /* outline view */
-ul.children.outline li.note { overflow: visible; padding: 0; position: relative; border: 0px; }
+ul.children.outline li.note { overflow: visible; padding: 0; position: relative;
+    border: 0px; -webkit-box-shadow: none; }
 ul.children.outline { position: absolute; padding-left: 1.5em; overflow-y: auto;
     top: 2em; bottom: .5em; right: .5em; left: .5em; }
 ul.children.outline, ul.children.outline ul.children { list-style-type: disc; }
